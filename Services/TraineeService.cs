@@ -1,38 +1,19 @@
 using TraineeManagement.Api.DTOs;
 using TraineeManagement.Api.Enums;
 using TraineeManagement.Api.Models;
+using TraineeManagement.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace TraineeManagement.Api.Services
 {
     public class TraineeService : ITraineeService
     {
-        private static List<Trainee> _trainees = new List<Trainee>
+        private readonly AppDbContext _context;
+        public TraineeService(AppDbContext context)
         {
-            new Trainee
-            {
-                Id = 1,
-                FirstName = "Ishteqali",
-                LastName = "Khan",
-                Email = "ishteqali.khan@zeuslearning.com",
-                TechStack = ".NET",
-                Status = TraineeStatus.Completed,
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            },
-            new Trainee
-            {
-                Id = 2,
-                FirstName = "Jowin",
-                LastName = "Paulose",
-                Email = "jowin.paulose@zeuslearning.com",
-                TechStack = ".NET",
-                Status = TraineeStatus.Active,
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            }
-        };
-        private static int _nextId = _trainees.Count + 1;
-        
+            _context = context;
+        }
+
         private TraineeResponse MapToResponse(Trainee trainee)
         {
             return new TraineeResponse
@@ -46,23 +27,34 @@ namespace TraineeManagement.Api.Services
             };
         }
 
-        public List<TraineeResponse> GetAllTrainees()
+        public async Task<List<TraineeResponse>> GetAllTraineesAsync(string? search = null)
         {
-            return _trainees.Select(MapToResponse).ToList();
+            var query = _context.Trainees.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                string searchTermLower = search.ToLower();
+                query = query.Where(t =>
+                    t.FirstName.ToLower().Contains(searchTermLower) ||
+                    t.LastName.ToLower().Contains(searchTermLower) ||
+                    t.Email.ToLower().Contains(searchTermLower) ||
+                    t.TechStack.ToLower().Contains(searchTermLower)
+                );
+            }
+            List<Trainee> trainees = await query.ToListAsync();
+            return trainees.Select(MapToResponse).ToList();
         }
-        
-        public TraineeResponse GetTraineeById(int id)
+
+        public async Task<TraineeResponse?> GetTraineeByIdAsync(int id)
         {
-            var trainee = _trainees.FirstOrDefault(t => t.Id == id);
-            if(trainee == null) return null;
+            Trainee? trainee = await _context.Trainees.FindAsync(id);
+            if (trainee == null) return null;
             return MapToResponse(trainee);
         }
 
-        public TraineeResponse AddTrainee(CreateTraineeRequest request)
+        public async Task<TraineeResponse> AddTraineeAsync(CreateTraineeRequest request)
         {
-            var newTrainee = new Trainee
+            Trainee newTrainee = new Trainee
             {
-                Id = _nextId++,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
@@ -72,14 +64,15 @@ namespace TraineeManagement.Api.Services
                 UpdatedDate = DateTime.UtcNow
             };
 
-            _trainees.Add(newTrainee);
+            await _context.Trainees.AddAsync(newTrainee);
+            await _context.SaveChangesAsync();
             return MapToResponse(newTrainee);
         }
 
-        public bool UpdateTrainee(int id, UpdateTraineeRequest request)
+        public async Task<bool> UpdateTraineeAsync(int id, UpdateTraineeRequest request)
         {
-            var trainee = _trainees.FirstOrDefault(t => t.Id == id);
-            if(trainee == null) return false;
+            Trainee? trainee = await _context.Trainees.FindAsync(id);
+            if (trainee == null) return false;
 
             trainee.FirstName = request.FirstName;
             trainee.LastName = request.LastName;
@@ -88,16 +81,18 @@ namespace TraineeManagement.Api.Services
             trainee.Status = request.Status;
             trainee.UpdatedDate = DateTime.UtcNow;
 
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        public bool DeleteTrainee(int id)
+        public async Task<bool> DeleteTraineeAsync(int id)
         {
-            var trainee = _trainees.FirstOrDefault(t => t.Id == id);
-            if(trainee == null) return false;
-            _trainees.Remove(trainee);
+            Trainee? trainee = await _context.Trainees.FindAsync(id);
+            if (trainee == null) return false;
+
+            _context.Trainees.Remove(trainee);
+            await _context.SaveChangesAsync();
             return true;
         }
-
     }
 }

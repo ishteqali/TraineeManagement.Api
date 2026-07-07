@@ -60,7 +60,33 @@ for GET (/api/trainees/{id})
 }
 ```
 
+## Features Completed
+
+Day 1 (3rd July, 2026)
+-Swagger UI for testing Api
+-In-memory data storage using List<Trainee>
+-Health Check endpoint (GET) /api/health
+-Get all Trainees (GET) /api/trainees
+-Get Trainee by Id (GET/{id}) /api/trainees/{id}
+-Add new Trainee (POST) /api/trainees
+
+Day 2 (6th July, 2026)
+-Update Trainee details (PUT) /api/trainees
+-Delete Trainee (DELETE) /api/trainees
+-Request and response DTOs
+-Input Validation
+-Service Layer Implementation
+
+Day 3 (7th July, 2026)
+-Added EntityFrameworkCore
+-Added Async functions
+-Added a Search function
+
 ## Known Limitations
 
 * No Database integrations
-* Deleted Trainee's id cannot be reuse
+
+## Improvements Planned
+
+* Integrating SQL database
+* Adding Authentications for api endpoints
