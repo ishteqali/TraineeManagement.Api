@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
+using TraineeManagement.Api.Enums;
 namespace TraineeManagement.Api.DTOs
 {
     public class CreateTraineeRequest
@@ -20,7 +20,7 @@ namespace TraineeManagement.Api.DTOs
         public required string TechStack { get; set; }
 
         [Required(ErrorMessage = "Status is required")]
-        [RegularExpression("(?i)^(Active|Inactive|Completed)", ErrorMessage = "Status must be either 'Active', 'Inactive' or 'Completed'")]
-        public required string Status { get; set; }
+        [EnumDataType(typeof(TraineeStatus), ErrorMessage = "Valid Status are Active, Inactive or Completed")]
+        public required TraineeStatus Status { get; set; }
     }
 }

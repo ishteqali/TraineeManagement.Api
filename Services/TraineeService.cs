@@ -1,4 +1,5 @@
 using TraineeManagement.Api.DTOs;
+using TraineeManagement.Api.Enums;
 using TraineeManagement.Api.Models;
 
 namespace TraineeManagement.Api.Services
@@ -14,7 +15,7 @@ namespace TraineeManagement.Api.Services
                 LastName = "Khan",
                 Email = "ishteqali.khan@zeuslearning.com",
                 TechStack = ".NET",
-                Status = "Active",
+                Status = TraineeStatus.Completed,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             },
@@ -25,12 +26,12 @@ namespace TraineeManagement.Api.Services
                 LastName = "Paulose",
                 Email = "jowin.paulose@zeuslearning.com",
                 TechStack = ".NET",
-                Status = "Active",
+                Status = TraineeStatus.Active,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             }
         };
-        private static int _nextId = _trainees.Count;
+        private static int _nextId = _trainees.Count + 1;
         
         private TraineeResponse MapToResponse(Trainee trainee)
         {
@@ -41,7 +42,7 @@ namespace TraineeManagement.Api.Services
                 LastName = trainee.LastName,
                 Email = trainee.Email,
                 TechStack = trainee.TechStack,
-                Status = trainee.Status
+                Status = trainee.Status.ToString()
             };
         }
 
