@@ -3,8 +3,10 @@ using TraineeManagement.Api.Services;
 using TraineeManagement.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TraineeManagementDb"));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseMySQL(connectionString));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

@@ -16,7 +16,7 @@ Install .NET sdk for windows or Ubuntu from official sources
 
 ### 2. Clone and Open this project directory
 
-### 3. restore dependencies
+### 3. Restore dependencies
 ```bash
 dotnet restore
 ```
@@ -27,10 +27,37 @@ dotnet run
 ```
 Open browser and go to the url: `http://localhost:5119/swagger/index.html` where application is running 
 
+## Database Setup (MySQL)
+This project uses MySQL database for data storage
+
+### 1. Run MySQL server on default port 3306
+
+### 2. Create database for this application and named it `trainee_management_db`
+
+### 3. Open `appsetting.json` file and add following connection string containing MySQL user and password.
+```bash
+{
+    "ConnectionStrings": {
+        "DefaultConnection": "server=localhost;port=3306;database=trainee_management_db;user={mysql_user};password={mysql_password};"
+    }
+}
+```
+
+### 4. Add neccessary dotnet packages
+```bash
+dotnet add package MySql.EntityFrameworkCore
+```
+
+### 5. Run this command on project root for creating database schema
+```bash
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+```
 
 ## API List
 
 * GET - /api/trainees - get all trainee
+* GET - /api/trainees?search={keyword} - get all trainee matching the keyword
 * GET - /api/trianees/{id} - get specific trainee by id
 * POST - /api/trainees - add new trainee
 * PUT - /api/trainees - update trainee by id
@@ -64,7 +91,8 @@ for GET (/api/trainees/{id})
 
 ## Features Completed
 
-### Day 1 (3rd July, 2026):
+### Phase 1:
+#### Day 1 (3rd July, 2026)
     -Swagger UI for testing Api
     -In-memory data storage using List<Trainee>
     -Health Check endpoint (GET) /api/health
@@ -84,11 +112,19 @@ for GET (/api/trainees/{id})
     -Added Async functions
     -Added a Search function
 
+### Phase 2:
+#### Day 1 (8th July, 2026)
+    -Replace InMemoryDatabase with MySQL database using EF Core
+    -Made connection to MySQL database successfully 
+    -Created Migration for Trainee and MySQL database schema created for Trainee
+    -All CRUD ( Create, Read, Update, and Delete) API working with MySQL
+    -After restarting server record still exists in database
+
 ## Known Limitations
 
-* No Database integrations
+* No Authentication
 
 ## Improvements Planned
 
-* Integrating SQL database
+* Integrating SQL database (Completed)
 * Adding Authentications for api endpoints
