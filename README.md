@@ -1,5 +1,7 @@
 # Trainee Management API
 
+The Trainee Management API is a backend web service that creates, updates, deletes,and manages trainee profiles for an organization. All Trainee Data is stored in InMemoryDatabase. It is also contain search query parameter in GET request for searching all Trainee records that matches that query. It provides input validaton for all request and shows only required data in response.
+
 ## Technology Used
 * ASP.NET Core Web API
 * C#
