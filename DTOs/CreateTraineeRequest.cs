@@ -21,6 +21,6 @@ namespace TraineeManagement.Api.DTOs
 
         [Required(ErrorMessage = "Status is required")]
         [EnumDataType(typeof(TraineeStatus), ErrorMessage = "Valid Status are Active, Inactive or Completed")]
-        public required TraineeStatus Status { get; set; }
+        public required string Status { get; set; }
     }
 }

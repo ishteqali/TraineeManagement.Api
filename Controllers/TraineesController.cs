@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TraineeManagement.Api.DTOs;
-using TraineeManagement.Api.Services;
 using System.Threading.Tasks;
+using TraineeManagement.Api.Interfaces;
 
 namespace TraineeManagementApi.Controllers
 {

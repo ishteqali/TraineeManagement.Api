@@ -120,6 +120,11 @@ for GET (/api/trainees/{id})
     -All CRUD ( Create, Read, Update, and Delete) API working with MySQL
     -After restarting server record still exists in database
 
+#### Day 2 (9th July, 2026)
+    -User table is created and only hash password is stored 
+    -Admin user is created by data seeding (username: admin, password: admin@123)
+    -POST /api/auth/login endpoint created with JWT token
+
 ## Known Limitations
 
 * No Authentication

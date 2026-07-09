@@ -3,6 +3,7 @@ using TraineeManagement.Api.Enums;
 using TraineeManagement.Api.Models;
 using TraineeManagement.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using TraineeManagement.Api.Interfaces;
 
 namespace TraineeManagement.Api.Services
 {
@@ -27,19 +28,25 @@ namespace TraineeManagement.Api.Services
             };
         }
 
-        public async Task<List<TraineeResponse>> GetAllTraineesAsync(string? search = null)
+        public IQueryable<Trainee> SearchQuery(string? searchTerm)
         {
-            var query = _context.Trainees.AsQueryable();
-            if (!string.IsNullOrEmpty(search))
+            IQueryable<Trainee>? query = _context.Trainees.AsQueryable();
+            if (!string.IsNullOrEmpty(searchTerm))
             {
-                string searchTermLower = search.ToLower();
-                query = query.Where(t =>
-                    t.FirstName.ToLower().Contains(searchTermLower) ||
-                    t.LastName.ToLower().Contains(searchTermLower) ||
-                    t.Email.ToLower().Contains(searchTermLower) ||
-                    t.TechStack.ToLower().Contains(searchTermLower)
+                string searchTermLower = searchTerm.ToLower();
+                query = query.Where(trainee =>
+                    trainee.FirstName.ToLower().Contains(searchTermLower) ||
+                    trainee.LastName.ToLower().Contains(searchTermLower) ||
+                    trainee.Email.ToLower().Contains(searchTermLower) ||
+                    trainee.TechStack.ToLower().Contains(searchTermLower)
                 );
             }
+            return query;
+        }
+
+        public async Task<List<TraineeResponse>> GetAllTraineesAsync(string? search = null)
+        {
+            IQueryable<Trainee>? query = SearchQuery(search);
             List<Trainee> trainees = await query.ToListAsync();
             return trainees.Select(MapToResponse).ToList();
         }
@@ -53,13 +60,13 @@ namespace TraineeManagement.Api.Services
 
         public async Task<TraineeResponse> AddTraineeAsync(CreateTraineeRequest request)
         {
-            Trainee newTrainee = new Trainee
+            Trainee newTrainee = new()
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
                 TechStack = request.TechStack,
-                Status = request.Status,
+                Status = Enum.Parse<TraineeStatus>(request.Status!.ToString(), ignoreCase: true),
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
@@ -78,7 +85,7 @@ namespace TraineeManagement.Api.Services
             trainee.LastName = request.LastName;
             trainee.Email = request.Email;
             trainee.TechStack = request.TechStack;
-            trainee.Status = request.Status;
+            trainee.Status = Enum.Parse<TraineeStatus>(request.Status!.ToString(), ignoreCase: true);
             trainee.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

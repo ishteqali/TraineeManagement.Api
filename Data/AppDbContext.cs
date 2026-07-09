@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Models;
+using TraineeManagement.Api.Enums;
+using BCrypt.Net;
 
 namespace TraineeManagement.Api.Data
 {
@@ -10,5 +12,28 @@ namespace TraineeManagement.Api.Data
         }
 
         public DbSet<Trainee> Trainees { get; set; }
+        public DbSet<User> Users { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>(); // Store UserRole enum as string in the database
+            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique(); // for unique username
+            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique(); // for unique email
+
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                Id = 1,
+                Username = "admin",
+                Email = "admin@gmail.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin@123"),
+                Role = UserRole.Admin,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            });
+
+
+        }
     }
 }

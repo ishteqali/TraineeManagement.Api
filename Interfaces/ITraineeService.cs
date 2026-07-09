@@ -1,6 +1,6 @@
 using TraineeManagement.Api.DTOs;
 
-namespace TraineeManagement.Api.Services
+namespace TraineeManagement.Api.Interfaces
 {
     public interface ITraineeService
     {
