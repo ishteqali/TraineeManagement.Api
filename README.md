@@ -34,13 +34,13 @@ This project uses MySQL database for data storage
 
 ### 2. Create database for this application and named it `trainee_management_db`
 
-### 3. Open `appsetting.json` file and add following connection string containing MySQL user and password.
+### 3. Create `.env` file and add the values like MySQL username, password, etc. in below format
 ```bash
-{
-    "ConnectionStrings": {
-        "DefaultConnection": "server=localhost;port=3306;database=trainee_management_db;user={mysql_user};password={mysql_password};"
-    }
-}
+DbSettings__Host=localhost
+DbSettings__Port=3306
+DbSettings__Database=trainee_management_db
+DbSettings__User=username
+DbSettings__Password=password
 ```
 
 ### 4. Add neccessary dotnet packages
@@ -57,7 +57,7 @@ dotnet ef database update
 ## API List
 
 * GET - /api/trainees - get all trainee
-* GET - /api/trainees?search={keyword} - get all trainee matching the keyword
+* GET - /api/trainees?pageNumber=1&pageSize=10&search={searchTerm}&status={status} - get all trainee matching the keyword
 * GET - /api/trianees/{id} - get specific trainee by id
 * POST - /api/trainees - add new trainee
 * PUT - /api/trainees - update trainee by id
@@ -114,7 +114,7 @@ for GET (/api/trainees/{id})
 
 ### Phase 2:
 #### Day 1 (8th July, 2026)
-    -Replace InMemoryDatabase with MySQL database using EF Core
+    -Replaced InMemoryDatabase with MySQL database using EF Core
     -Made connection to MySQL database successfully 
     -Created Migration for Trainee and MySQL database schema created for Trainee
     -All CRUD ( Create, Read, Update, and Delete) API working with MySQL
@@ -125,11 +125,18 @@ for GET (/api/trainees/{id})
     -Admin user is created by data seeding (username: admin, password: admin@123)
     -POST /api/auth/login endpoint created with JWT token
 
+#### Day 3 (10th July, 2026)
+    -Secured api endpoints with JWT Role-Based Access Control
+    -Added status filter along with search query and pagination
+    -Configured CORS for future React Frontend
+    -Implemented structured logging and saving of logs at Logs/api-log-{date}.txt
+    -Used .env for database connection
+
 ## Known Limitations
 
-* No Authentication
+* No Authentication (fixed)
 
 ## Improvements Planned
 
 * Integrating SQL database (Completed)
-* Adding Authentications for api endpoints
+* Adding Authentications for api endpoints (Completed)

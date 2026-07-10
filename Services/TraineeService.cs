@@ -4,15 +4,18 @@ using TraineeManagement.Api.Models;
 using TraineeManagement.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace TraineeManagement.Api.Services
 {
     public class TraineeService : ITraineeService
     {
         private readonly AppDbContext _context;
-        public TraineeService(AppDbContext context)
+        private readonly ILogger<TraineeService> _logger;
+        public TraineeService(AppDbContext context, ILogger<TraineeService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         private TraineeResponse MapToResponse(Trainee trainee)
@@ -28,9 +31,8 @@ namespace TraineeManagement.Api.Services
             };
         }
 
-        public IQueryable<Trainee> SearchQuery(string? searchTerm)
+        public IQueryable<Trainee> SearchFilterQuery(IQueryable<Trainee> query, string? searchTerm)
         {
-            IQueryable<Trainee>? query = _context.Trainees.AsQueryable();
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 string searchTermLower = searchTerm.ToLower();
@@ -44,11 +46,34 @@ namespace TraineeManagement.Api.Services
             return query;
         }
 
-        public async Task<List<TraineeResponse>> GetAllTraineesAsync(string? search = null)
+        public IQueryable<Trainee> StatusFilterQuery(IQueryable<Trainee> query, string? status)
         {
-            IQueryable<Trainee>? query = SearchQuery(search);
-            List<Trainee> trainees = await query.ToListAsync();
-            return trainees.Select(MapToResponse).ToList();
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<TraineeStatus>(status, true, out TraineeStatus parsedStatus))
+            {
+                query = query.Where(trainee => trainee.Status == parsedStatus);
+            }
+            return query;
+        }
+
+        public IQueryable<Trainee> AllFilterQueries(string? searchTerm, string? status)
+        {
+            IQueryable<Trainee> query = _context.Trainees.AsQueryable();
+            query = SearchFilterQuery(query, searchTerm);
+            query = StatusFilterQuery(query, status);
+            return query;
+        }
+
+        public async Task<PagedResponse<TraineeResponse>> GetTraineesAsync(int pageNumber, int pageSize, string? searchTerm, string? status)
+        {
+            IQueryable<Trainee> query = AllFilterQueries(searchTerm, status);
+
+            int totalRecords = await query.CountAsync();
+
+            List<Trainee> pagedTrainees = await query.OrderBy(trainee => trainee.Id)
+                           .Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            List<TraineeResponse> traineeResponses = pagedTrainees.Select(MapToResponse).ToList();
+            return new PagedResponse<TraineeResponse>(pageNumber, pageSize, totalRecords, traineeResponses);
         }
 
         public async Task<TraineeResponse?> GetTraineeByIdAsync(int id)
@@ -73,13 +98,14 @@ namespace TraineeManagement.Api.Services
 
             await _context.Trainees.AddAsync(newTrainee);
             await _context.SaveChangesAsync();
+            _logger.LogInformation($"Trainee Created Successfully with ID: {newTrainee.Id} at Timestamp: {newTrainee.CreatedDate}");
             return MapToResponse(newTrainee);
         }
 
-        public async Task<bool> UpdateTraineeAsync(int id, UpdateTraineeRequest request)
+        public async Task<TraineeResponse?> UpdateTraineeAsync(int id, UpdateTraineeRequest request)
         {
             Trainee? trainee = await _context.Trainees.FindAsync(id);
-            if (trainee == null) return false;
+            if (trainee == null) return null;
 
             trainee.FirstName = request.FirstName;
             trainee.LastName = request.LastName;
@@ -89,7 +115,8 @@ namespace TraineeManagement.Api.Services
             trainee.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return true;
+            _logger.LogInformation($"Trainee with ID: {trainee.Id} was successfully updated at Timestamp: {trainee.UpdatedDate} UTC");
+            return MapToResponse(trainee);
         }
 
         public async Task<bool> DeleteTraineeAsync(int id)
@@ -99,6 +126,7 @@ namespace TraineeManagement.Api.Services
 
             _context.Trainees.Remove(trainee);
             await _context.SaveChangesAsync();
+            _logger.LogInformation($"Trianee with ID: {trainee.Id} was successfully deleted at Timestamp: {DateTime.UtcNow} UTC");
             return true;
         }
     }

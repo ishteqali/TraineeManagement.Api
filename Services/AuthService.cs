@@ -22,7 +22,7 @@ namespace TraineeManagement.Api.Services
 
         public async Task<LoginResponse?> LoginAsync(LoginRequest request)
         {
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+            User? user = await _context.Users.FirstOrDefaultAsync(existingUser => existingUser.Username == request.Username);
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return null;
@@ -50,9 +50,10 @@ namespace TraineeManagement.Api.Services
 
             Claim[]? claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim("Username", user.Username),
-                new Claim("Role", user.Role.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
 
             JwtSecurityToken? token = new(

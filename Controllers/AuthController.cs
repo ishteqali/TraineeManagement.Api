@@ -11,10 +11,12 @@ namespace TraineeManagement.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }   
 
         [HttpPost("login")]
@@ -23,9 +25,10 @@ namespace TraineeManagement.Api.Controllers
             LoginResponse? response = await _authService.LoginAsync(request);
             if (response == null)
             {
+                _logger.LogWarning($"Failed login attempt for username: {request.Username}");
                 return Unauthorized();
             }
-
+            _logger.LogInformation($"Successful login for username: {request.Username}");
             return Ok(response);
         }
     }

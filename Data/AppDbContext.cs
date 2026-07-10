@@ -18,9 +18,9 @@ namespace TraineeManagement.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>(); // Store UserRole enum as string in the database
-            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique(); // for unique username
-            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique(); // for unique email
+            modelBuilder.Entity<User>().Property(user => user.Role).HasConversion<string>(); // Store UserRole enum as string in the database
+            modelBuilder.Entity<User>().HasIndex(user => user.Username).IsUnique(); // for unique username
+            modelBuilder.Entity<User>().HasIndex(user => user.Email).IsUnique(); // for unique email
 
             modelBuilder.Entity<User>().HasData(new User
             {
