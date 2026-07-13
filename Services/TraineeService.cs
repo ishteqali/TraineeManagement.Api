@@ -65,6 +65,10 @@ namespace TraineeManagement.Api.Services
 
         public async Task<PagedResponse<TraineeResponse>> GetTraineesAsync(int pageNumber, int pageSize, string? searchTerm, string? status)
         {
+            // Preventing bad input for pageNumber and pageSize 
+            if(pageNumber < 1) pageNumber = 1;
+            if(pageSize < 1 || pageSize > 50) pageSize = 10;
+
             IQueryable<Trainee> query = AllFilterQueries(searchTerm, status);
 
             int totalRecords = await query.CountAsync();

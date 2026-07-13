@@ -32,7 +32,7 @@ namespace TraineeManagementApi.Controllers
             )
         {
 
-            var trainees = await _traineeService.GetTraineesAsync(pageNumber, pageSize, search, status);
+            PagedResponse<TraineeResponse>? trainees = await _traineeService.GetTraineesAsync(pageNumber, pageSize, search, status);
             return Ok(trainees);
         }
 
