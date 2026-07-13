@@ -98,6 +98,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddScoped<ITraineeService, TraineeService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMentorService, MentorService>();
+builder.Services.AddScoped<ILearningTaskService, LearningTaskService>();
 
 WebApplication? app = builder.Build();
 

@@ -132,6 +132,11 @@ for GET (/api/trainees/{id})
     -Implemented structured logging and saving of logs at Logs/api-log-{date}.txt
     -Used .env for database connection
 
+#### Day 4 (13th July, 2026)
+    -Done Mentor Module Completely with Models, DTOs, Service, Controller and api is protected using JWT
+    -Done Learning Task Module Completely with Models, DTOs, Service, Controller and api is protected using JWT
+    -MySQL schema for Mentor and Learning Task created with all migrations
+
 ## Known Limitations
 
 * No Authentication (fixed)
