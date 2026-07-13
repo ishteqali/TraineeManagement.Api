@@ -6,7 +6,7 @@ using TraineeManagement.Api.Data;
 
 namespace TraineeManagement.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {

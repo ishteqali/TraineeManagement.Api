@@ -48,9 +48,16 @@ namespace TraineeManagement.Api.Services
 
         public IQueryable<Trainee> StatusFilterQuery(IQueryable<Trainee> query, string? status)
         {
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<TraineeStatus>(status, true, out TraineeStatus parsedStatus))
+            if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(trainee => trainee.Status == parsedStatus);
+                if (Enum.TryParse(status, true, out TraineeStatus parsedStatus))
+                {
+                    query = query.Where(trainee => trainee.Status == parsedStatus);
+                }
+                else
+                {
+                    query = query.Where(trainee => false);
+                }
             }
             return query;
         }
@@ -66,8 +73,8 @@ namespace TraineeManagement.Api.Services
         public async Task<PagedResponse<TraineeResponse>> GetTraineesAsync(int pageNumber, int pageSize, string? searchTerm, string? status)
         {
             // Preventing bad input for pageNumber and pageSize 
-            if(pageNumber < 1) pageNumber = 1;
-            if(pageSize < 1 || pageSize > 50) pageSize = 10;
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1 || pageSize > 50) pageSize = 10;
 
             IQueryable<Trainee> query = AllFilterQueries(searchTerm, status);
 

@@ -48,9 +48,16 @@ namespace TraineeManagement.Api.Services
 
         public IQueryable<LearningTask> StatusFilterQuery(IQueryable<LearningTask> query, string? status)
         {
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<LearningTaskStatus>(status, true, out LearningTaskStatus parsedStatus))
+            if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(learningTask => learningTask.Status == parsedStatus);
+                if (Enum.TryParse(status, true, out LearningTaskStatus parsedStatus))
+                {
+                    query = query.Where(learningTask => learningTask.Status == parsedStatus);
+                }
+                else
+                {
+                    query = query.Where(learningTask => false);
+                }
             }
             return query;
         }

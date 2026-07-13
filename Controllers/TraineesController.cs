@@ -11,7 +11,7 @@ namespace TraineeManagementApi.Controllers
 {
     [Authorize(Roles = "Admin")]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/trainee")]
     public class TraineesController : ControllerBase
     {
         private readonly ITraineeService _traineeService;
