@@ -24,7 +24,7 @@ namespace TraineeManagementApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<TraineeResponse>>> GetTrainees(
+        public async Task<ActionResult<PagedResponse<TraineeResponse>>> GetTrainees(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
