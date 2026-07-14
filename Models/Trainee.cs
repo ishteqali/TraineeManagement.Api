@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using TraineeManagement.Api.Enums;
 
 namespace TraineeManagement.Api.Models
@@ -13,5 +15,8 @@ namespace TraineeManagement.Api.Models
         public required TraineeStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
+
+        [JsonIgnore]
+        public ICollection<TaskAssignment> TaskAssingments { get; set; } = new List<TaskAssignment>();
     }
 }

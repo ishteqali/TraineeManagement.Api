@@ -11,8 +11,8 @@ using TraineeManagement.Api.Data;
 namespace TraineeManagement.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260713094811_AddLearningTaskModule")]
-    partial class AddLearningTaskModule
+    [Migration("20260714130055_InitialProjectSchema")]
+    partial class InitialProjectSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -93,6 +93,74 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Mentors");
                 });
 
+            modelBuilder.Entity("TraineeManagement.Api.Models.Submission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmissionUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("SubmittedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("TaskAssignmentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskAssignmentId");
+
+                    b.ToTable("Submissions");
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.TaskAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AssignedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("LearningTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MentorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TraineeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LearningTaskId");
+
+                    b.HasIndex("MentorId");
+
+                    b.HasIndex("TraineeId");
+
+                    b.ToTable("TaskAssignments");
+                });
+
             modelBuilder.Entity("TraineeManagement.Api.Models.Trainee", b =>
                 {
                     b.Property<int>("Id")
@@ -171,13 +239,66 @@ namespace TraineeManagement.Api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(2026, 7, 13, 9, 48, 10, 732, DateTimeKind.Utc).AddTicks(2100),
+                            CreatedDate = new DateTime(2026, 7, 14, 13, 0, 54, 657, DateTimeKind.Utc).AddTicks(762),
                             Email = "admin@gmail.com",
-                            PasswordHash = "$2a$11$aO63FKjYfYmau8HWObgxgu45J/aTKQAL8sVgaV7FQe25LctdTpkBG",
+                            PasswordHash = "$2a$11$eIqKuDH.qlk73O8go8hKf.wBMTsxMM59hhB6od0PyIZJnCxr3kv8.",
                             Role = "Admin",
-                            UpdatedDate = new DateTime(2026, 7, 13, 9, 48, 10, 732, DateTimeKind.Utc).AddTicks(2337),
+                            UpdatedDate = new DateTime(2026, 7, 14, 13, 0, 54, 657, DateTimeKind.Utc).AddTicks(1020),
                             Username = "admin"
                         });
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.Submission", b =>
+                {
+                    b.HasOne("TraineeManagement.Api.Models.TaskAssignment", "TaskAssignment")
+                        .WithMany()
+                        .HasForeignKey("TaskAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskAssignment");
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.TaskAssignment", b =>
+                {
+                    b.HasOne("TraineeManagement.Api.Models.LearningTask", "LearningTask")
+                        .WithMany("TaskAssingments")
+                        .HasForeignKey("LearningTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TraineeManagement.Api.Models.Mentor", "Mentor")
+                        .WithMany("TaskAssingments")
+                        .HasForeignKey("MentorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TraineeManagement.Api.Models.Trainee", "Trainee")
+                        .WithMany("TaskAssingments")
+                        .HasForeignKey("TraineeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LearningTask");
+
+                    b.Navigation("Mentor");
+
+                    b.Navigation("Trainee");
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.LearningTask", b =>
+                {
+                    b.Navigation("TaskAssingments");
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.Mentor", b =>
+                {
+                    b.Navigation("TaskAssingments");
+                });
+
+            modelBuilder.Entity("TraineeManagement.Api.Models.Trainee", b =>
+                {
+                    b.Navigation("TaskAssingments");
                 });
 #pragma warning restore 612, 618
         }

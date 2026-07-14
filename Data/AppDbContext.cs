@@ -16,6 +16,7 @@ namespace TraineeManagement.Api.Data
         public DbSet<Mentor> Mentors { get; set; }
         public DbSet<LearningTask> LearningTasks { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
+        public DbSet<Submission> Submissions { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

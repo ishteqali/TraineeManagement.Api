@@ -26,9 +26,9 @@ namespace TraineeManagement.Api.Controllers
         {
             try
             {
-                TaskAssignmentResponse taskAssignment = await _taskAssignmentService.CreateAssignmentAsync(request);
-                _logger.LogInformation($"Task Assignment with ID: {taskAssignment} successfully created.");
-                return Ok(taskAssignment);
+                TaskAssignmentResponse response = await _taskAssignmentService.CreateAssignmentAsync(request);
+                _logger.LogInformation($"Task Assignment with ID: {response.Id} successfully created.");
+                return CreatedAtAction(nameof(GetAssignmentById), new { id = response.Id }, response);
             }
             catch (ArgumentException ex)
             {

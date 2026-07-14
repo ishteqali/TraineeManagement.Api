@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TraineeManagement.Api.DTOs;
-using TraineeManagement.Api.Models;
 
 namespace TraineeManagement.Api.Interfaces
 {
