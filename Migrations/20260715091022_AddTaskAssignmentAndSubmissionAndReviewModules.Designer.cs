@@ -11,8 +11,8 @@ using TraineeManagement.Api.Data;
 namespace TraineeManagement.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260714141222_AddReviewModule")]
-    partial class AddReviewModule
+    [Migration("20260715091022_AddTaskAssignmentAndSubmissionAndReviewModules")]
+    partial class AddTaskAssignmentAndSubmissionAndReviewModules
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -273,11 +273,11 @@ namespace TraineeManagement.Api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(2026, 7, 14, 14, 12, 21, 578, DateTimeKind.Utc).AddTicks(2694),
+                            CreatedDate = new DateTime(2026, 7, 15, 9, 10, 21, 733, DateTimeKind.Utc).AddTicks(9232),
                             Email = "admin@gmail.com",
-                            PasswordHash = "$2a$11$X5XNltgPMxR4KLrgZsFsZOAHyYcisDmjODVKnH4vJxNGSNCtvRyae",
+                            PasswordHash = "$2a$11$1HePtlu5ORj8mqIO7zwMuuQI//3ulXdl7Qy7vjZq3kaEGmGw1cS.m",
                             Role = "Admin",
-                            UpdatedDate = new DateTime(2026, 7, 14, 14, 12, 21, 578, DateTimeKind.Utc).AddTicks(2959),
+                            UpdatedDate = new DateTime(2026, 7, 15, 9, 10, 21, 733, DateTimeKind.Utc).AddTicks(9428),
                             Username = "admin"
                         });
                 });
