@@ -13,9 +13,6 @@ namespace TraineeManagement.Api.DTOs
         [Required(ErrorMessage = "Learning Task id is required")]
         public int LearningTaskId { get; set; }
 
-        [Required(ErrorMessage = "Assigned Date is required")]
-        public DateTime AssignedDate { get; set; }
-
         [Required(ErrorMessage = "Due Date is required")]
         public DateTime DueDate { get; set; }
 
@@ -27,7 +24,7 @@ namespace TraineeManagement.Api.DTOs
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (DueDate < AssignedDate)
+            if (DueDate < DateTime.UtcNow)
             {
                 yield return new ValidationResult(
                     "The Due Date must be after the Assigned Date",

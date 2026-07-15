@@ -23,6 +23,7 @@ dotnet restore
 
 ### 4. Build and Run the .NET project
 ```bash
+dotnet build
 dotnet run
 ```
 Open browser and go to the url: `http://localhost:5119/swagger/index.html` where application is running 
@@ -48,20 +49,70 @@ DbSettings__Password=password
 dotnet add package MySql.EntityFrameworkCore
 ```
 
-### 5. Run this command on project root for creating database schema
+### 5. Run this command on project root for creating database schema (EF Core migration commands)
 ```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
+## Login Credentials for testing
+```bash
+{
+    "username": "admin",
+    "password": "admin@123"
+}
+```
+
+## JWT usage instructions
+1. Login using `POST /api/auth/login` endpoint with login credentials
+2. After successful login, response body will contain jwt token and copy it
+3. In Swagger UI, there is authorize button on top of the page click it and paste token and then click authorize
+4. Now we can use all the secure api after login using this token till token get expire
+
 ## API List
 
-* GET - /api/trainees - get all trainee
-* GET - /api/trainees?pageNumber=1&pageSize=10&search={searchTerm}&status={status} - get all trainee matching the keyword
+### Health
+* GET - /api/health - getting system running status
+
+### Auth
+* POST - /api/auth/login - user login endpoint
+
+### Trainee
+* GET - /api/trainees?pageNumber=1&pageSize=10&search={searchTerm}&status={status} - get all trainee matching the keyword with pagination
 * GET - /api/trianees/{id} - get specific trainee by id
 * POST - /api/trainees - add new trainee
 * PUT - /api/trainees - update trainee by id
 * DELETE - /api/trainees - delete trainee by id
+
+### Mentor
+* GET - /api/mentors?pageNumber=1&pageSize=10&search={searchTerm}&status={status} - get all mentor matching the keyword with pagination
+* GET - /api/mentors/{id} - get specific mentor by id
+* POST - /api/mentors - add new mentor
+* PUT - /api/mentors - update mentor by id
+* DELETE - /api/mentor - delete mentor by id
+
+### Learning Task
+* GET - /api/learning-tasks?pageNumber=1&pageSize=10&search={searchTerm}&status={status} - get all learning task matching the keyword with pagination
+* GET - /api/learning-tasks/{id} - get specific learning task by id
+* POST - /api/learning-tasks - add new learning task
+* PUT - /api/learning-tasks - update learning task by id
+* DELETE - /api/learning-tasks - delete learning task by id
+
+### Task Assigment 
+* POST - /api/task-assignments - add new task assignment
+* GET - /api/task-assignments - get all task assignment 
+* GET - /api/task-assignments/{id} - get specific task assignment by id
+* PUT - /api/task-assignments/{id}/status - update task assignment status
+
+### Submission
+* POST - /api/submissions -  add new submission
+* GET - /api/submissions - get all submission
+* GET - /api/submissions/{id} - get specific submission by id
+
+### Review
+* POST - /api/reviews - add new review
+* GET - /api/reviews - get all review 
+* GET - /api/reviews/{id} - get specific review by id
 
 ## Sample Request JSON
 
@@ -137,6 +188,11 @@ for GET (/api/trainees/{id})
     -Done Learning Task Module Completely with Models, DTOs, Service, Controller and api is protected using JWT
     -MySQL schema for Mentor and Learning Task created with all migrations
 
+#### Day 5 (14th July, 2026)
+    -Completed Task Assignment, Submission and Review Module with all required endpoints and api is protected using JWT
+    -Added Global Exception Handling Middleware for unexpected errors
+    -Validated System against OWASP API security standards
+
 ## Known Limitations
 
 * No Authentication (fixed)
@@ -145,3 +201,16 @@ for GET (/api/trainees/{id})
 
 * Integrating SQL database (Completed)
 * Adding Authentications for api endpoints (Completed)
+* Adding React UI 
+
+## Security Checklist
+* User Authentication using JWT token
+* Hashing and storing of password in database
+* Logging of all events and password and token doesn't log
+* Global Exception Handling
+* No hardcoding of secrets
+* CORS restricted to expected origin 
+* Protected APIs require token 
+
+## Next Improvement Areas
+* Adding Frontend UI 

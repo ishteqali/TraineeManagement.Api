@@ -5,10 +5,11 @@ using TraineeManagement.Api.Data;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.Filters;
 using Microsoft.OpenApi;
 using Serilog; // for logging
 using dotenv.net;
+using Microsoft.AspNetCore.Mvc;
+using TraineeManagement.Api.Middleware;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +43,18 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+}).ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var secureErrorPayload = new
+            {
+                message = "The request payload format is invalid or malformed."
+            };
+
+            return new BadRequestObjectResult(secureErrorPayload);
+        };
+    });
 
 // Configuring JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -101,6 +113,7 @@ builder.Services.AddScoped<IMentorService, MentorService>();
 builder.Services.AddScoped<ILearningTaskService, LearningTaskService>();
 builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 WebApplication? app = builder.Build();
 
@@ -110,6 +123,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("ReactFrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();

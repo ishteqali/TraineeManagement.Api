@@ -54,7 +54,7 @@ namespace TraineeManagement.Api.Services
                 TraineeId = request.TraineeId,
                 MentorId = request.MentorId,
                 LearningTaskId = request.LearningTaskId,
-                AssignedDate = request.AssignedDate,
+                AssignedDate = DateTime.UtcNow,
                 DueDate = request.DueDate,
                 Status = Enum.Parse<TaskAssignmentStatus>(request.Status!.ToString(), ignoreCase: true),
                 Remarks = request.Remarks,
