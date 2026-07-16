@@ -193,6 +193,18 @@ for GET (/api/trainees/{id})
     -Added Global Exception Handling Middleware for unexpected errors
     -Validated System against OWASP API security standards
 
+### Phase 3:
+#### Day 1 (15th July, 2026)
+    -Created File Abstraction for finding, reading, saving and deleting file with seperating logic for file handling in 'LocalFileStorageService.cs' and for validation and controller communication in 'SubmissionFileService.cs'
+    -Created all api for upload, download, and delete
+    -added validation for file upload for malicious upload concern
+
+#### Day 2 (16th July, 2026)
+    -Installed Docker for redis
+    -Implemented caching on getting trainee, task assignment and submission
+    -Added cache invalidation for updated and deleted data
+    -Added Logging of cache failure 
+
 ## Known Limitations
 
 * No Authentication (fixed)

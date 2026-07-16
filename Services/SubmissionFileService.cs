@@ -158,9 +158,7 @@ namespace TraineeManagement.Api.Services
             }
             string? extension = Path.GetExtension(file.FileName);
 
-            if (!_options.AllowedExtensions.Contains(
-                extension,
-                StringComparer.OrdinalIgnoreCase))
+            if (!_options.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
                 throw new BadRequestException("File type is not supported.");
             }

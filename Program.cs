@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 using TraineeManagement.Api.Middleware;
 using TraineeManagement.Api.Configurations;
 using Microsoft.AspNetCore.Http.Features;
+using StackExchange.Redis;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +37,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:3000",
-            "http://localhost:5173", "http://localhost:5119","http://127.0.0.1:5119")
+            "http://localhost:5173", "http://localhost:5119", "http://127.0.0.1:5119")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -56,7 +58,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
             return new BadRequestObjectResult(secureErrorPayload);
         };
-    });
+    });;
 
 // Configuring JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -110,18 +112,15 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-builder.Services.Configure<FileStorageOptions>(
-    builder.Configuration.GetSection(FileStorageOptions.SectionName)
+builder.Services.Configure<FileStorageOptions>(builder.Configuration.GetSection(FileStorageOptions.SectionName)
 );
 
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
-});
+builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection(RedisOptions.SectionName));
 
-builder.WebHost.ConfigureKestrel(options =>
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = builder.Configuration["Redis:InstanceName"];
 });
 
 builder.Services.AddScoped<ITraineeService, TraineeService>();
@@ -134,7 +133,17 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 
-
+// Removing Upload file limit for kestral 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue; // Removes multipart limit
+    options.ValueLengthLimit = int.MaxValue;          // Removes single form value limit
+    options.MemoryBufferThreshold = int.MaxValue;     // Optional memory buffer bump
+});
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = long.MaxValue; // Removes total request size cap
+});
 
 WebApplication? app = builder.Build();
 
@@ -142,6 +151,25 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+string? redisConnection = app.Configuration["Redis:ConnectionString"];
+
+try
+{
+    if (redisConnection != null)
+    {
+        ConnectionMultiplexer? connection = await ConnectionMultiplexer.ConnectAsync(redisConnection);
+
+        if (connection.IsConnected)
+        {
+            app.Logger.LogInformation("Redis connected successfully.");
+        }
+    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Unable to connect to Redis.");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

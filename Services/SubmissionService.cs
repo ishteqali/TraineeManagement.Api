@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace TraineeManagement.Api.Services
 {
@@ -15,11 +17,13 @@ namespace TraineeManagement.Api.Services
     {
         private readonly AppDbContext _context;
         private readonly ILogger<SubmissionService> _logger;
+        private readonly IDistributedCache _cache;
 
-        public SubmissionService(AppDbContext context, ILogger<SubmissionService> logger)
+        public SubmissionService(AppDbContext context, ILogger<SubmissionService> logger, IDistributedCache cache)
         {
             _context = context;
             _logger = logger;
+            _cache = cache;
         }
 
         private SubmissionResponse MapToResponse(Submission submission)
@@ -72,6 +76,21 @@ namespace TraineeManagement.Api.Services
 
         public async Task<SubmissionResponse?> GetSubmissionByIdAsync(int id)
         {
+            string cacheKey = CacheKeys.Submission(id);
+            try
+            {
+                string? cachedData = await _cache.GetStringAsync(cacheKey);
+
+                if (!string.IsNullOrEmpty(cachedData))
+                {
+                    return JsonSerializer.Deserialize<SubmissionResponse>(cachedData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Redis cache unavailable. Falling back to MySQL.");
+            }
+
             Submission? submission = await _context.Submissions
                 .Include(s => s.TaskAssignment)
                 .ThenInclude(ta => ta.LearningTask)
@@ -79,6 +98,26 @@ namespace TraineeManagement.Api.Services
             if (submission == null)
             {
                 return null;
+            }
+            SubmissionResponse response = MapToResponse(submission);
+            
+            DistributedCacheEntryOptions cacheOptions = new()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            };
+
+            string? serializedResponse = JsonSerializer.Serialize(response);
+
+            try
+            {
+                await _cache.SetStringAsync(
+                    cacheKey,
+                    serializedResponse,
+                    cacheOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Unable to write data to Redis cache.");
             }
             return MapToResponse(submission);
         }
