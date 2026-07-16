@@ -8,6 +8,8 @@ using TraineeManagement.Api.Interfaces;
 using TraineeManagement.Api.Models;
 using TraineeManagement.Api.Data;
 using TraineeManagement.Api.Enums;
+using TraineeManagement.Api.Constants;
+using TraineeManagement.Api.Exceptions;
 
 namespace TraineeManagement.Api.Services
 {
@@ -22,7 +24,7 @@ namespace TraineeManagement.Api.Services
             _logger = logger;
         }
 
-        public ReviewResponse MapToResponse(Review review)
+        private ReviewResponse MapToResponse(Review review)
         {
             return new ReviewResponse
             {
@@ -40,10 +42,10 @@ namespace TraineeManagement.Api.Services
         public async Task<ReviewResponse> CreateReviewAsync(CreateReviewRequest request)
         {
             Submission? submission = await _context.Submissions.FindAsync(request.SubmissionId);
-            if (submission == null) throw new ArgumentException($"Submission {request.SubmissionId} not found.");
+            if (submission == null) throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
 
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor == null) throw new ArgumentException($"Mentor {request.MentorId} not found.");
+            if (mentor == null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
             Review review = new Review
             {

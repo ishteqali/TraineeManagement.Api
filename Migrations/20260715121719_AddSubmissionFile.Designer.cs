@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TraineeManagement.Api.Data;
 
@@ -10,9 +11,11 @@ using TraineeManagement.Api.Data;
 namespace TraineeManagement.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260715121719_AddSubmissionFile")]
+    partial class AddSubmissionFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,46 +157,6 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Submissions");
                 });
 
-            modelBuilder.Entity("TraineeManagement.Api.Models.SubmissionFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Checksum")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("OriginalFileName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("StorageFileName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("SubmissionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UploadedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SubmissionId");
-
-                    b.ToTable("SubmissionFiles");
-                });
-
             modelBuilder.Entity("TraineeManagement.Api.Models.TaskAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -310,11 +273,11 @@ namespace TraineeManagement.Api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(2026, 7, 15, 15, 5, 0, 404, DateTimeKind.Utc).AddTicks(6610),
+                            CreatedDate = new DateTime(2026, 7, 15, 12, 17, 19, 259, DateTimeKind.Utc).AddTicks(24),
                             Email = "admin@gmail.com",
-                            PasswordHash = "$2a$11$IblzUPRvCGQZKBt3PMNpx.L8nfQYPooBOoACK8rCuGtaxifRhL1J6",
+                            PasswordHash = "$2a$11$u75VH7DOBqO/0YnoiacWwuJ2B6FybQwRBThBMxyMXFgUwM3MREMuO",
                             Role = "Admin",
-                            UpdatedDate = new DateTime(2026, 7, 15, 15, 5, 0, 404, DateTimeKind.Utc).AddTicks(7192),
+                            UpdatedDate = new DateTime(2026, 7, 15, 12, 17, 19, 259, DateTimeKind.Utc).AddTicks(288),
                             Username = "admin"
                         });
                 });
@@ -347,17 +310,6 @@ namespace TraineeManagement.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("TaskAssignment");
-                });
-
-            modelBuilder.Entity("TraineeManagement.Api.Models.SubmissionFile", b =>
-                {
-                    b.HasOne("TraineeManagement.Api.Models.Submission", "Submission")
-                        .WithMany()
-                        .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Submission");
                 });
 
             modelBuilder.Entity("TraineeManagement.Api.Models.TaskAssignment", b =>

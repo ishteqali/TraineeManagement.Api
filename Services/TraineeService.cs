@@ -31,7 +31,7 @@ namespace TraineeManagement.Api.Services
             };
         }
 
-        public IQueryable<Trainee> SearchFilterQuery(IQueryable<Trainee> query, string? searchTerm)
+        private IQueryable<Trainee> SearchFilterQuery(IQueryable<Trainee> query, string? searchTerm)
         {
             if (!string.IsNullOrEmpty(searchTerm))
             {
@@ -46,7 +46,7 @@ namespace TraineeManagement.Api.Services
             return query;
         }
 
-        public IQueryable<Trainee> StatusFilterQuery(IQueryable<Trainee> query, string? status)
+        private IQueryable<Trainee> StatusFilterQuery(IQueryable<Trainee> query, string? status)
         {
             if (!string.IsNullOrEmpty(status))
             {
@@ -62,7 +62,7 @@ namespace TraineeManagement.Api.Services
             return query;
         }
 
-        public IQueryable<Trainee> AllFilterQueries(string? searchTerm, string? status)
+        private IQueryable<Trainee> AllFilterQueries(string? searchTerm, string? status)
         {
             IQueryable<Trainee> query = _context.Trainees.AsQueryable();
             query = SearchFilterQuery(query, searchTerm);

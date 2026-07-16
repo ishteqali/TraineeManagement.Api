@@ -4,6 +4,10 @@ using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using TraineeManagement.Api.Constants;
+using TraineeManagement.Api.Exceptions;
+using TraineeManagement.Api.Exceptions.Base;
+using TraineeManagement.Api.DTOs;
 
 namespace TraineeManagement.Api.Middleware
 {
@@ -24,29 +28,37 @@ namespace TraineeManagement.Api.Middleware
             {
                 await _next(context);
             }
-            catch (ArgumentException ex)
+            catch (ApiException ex)
             {
-                _logger.LogWarning("Validation Exception: {Message}", ex.Message);
-                await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ex.Message);
+                _logger.LogWarning(ex.Message);
+
+                await HandleExceptionAsync(context, ex.StatusCode, ex.Message);
             }
-            catch (JsonException jsonEx)
+            catch (JsonException ex)
             {
-                _logger.LogWarning(jsonEx, "A client passed malformed JSON.");
-                await HandleExceptionAsync(context, HttpStatusCode.BadRequest, "The request payload format is invalid.");
+                _logger.LogWarning(ex, ExceptionMessages.InvalidJson);
+
+                await HandleExceptionAsync(context, (int)HttpStatusCode.BadRequest, ExceptionMessages.InvalidJson);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "A critical unhandled exception occurred.");
-                await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, "An unexpected error occurred. Please try again later.");
+                _logger.LogError(ex, ExceptionMessages.UnexpectedError);
+
+                await HandleExceptionAsync(context, (int)HttpStatusCode.InternalServerError, ExceptionMessages.UnexpectedError);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, HttpStatusCode statusCode, string message)
+        private static Task HandleExceptionAsync(HttpContext context, int statusCode, string message)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)statusCode;
+            context.Response.StatusCode = statusCode;
 
-            string? result = JsonSerializer.Serialize(new { message = message });
+            string? result = JsonSerializer.Serialize(new ErrorResponse
+            {
+                StatusCode = statusCode,
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            });
 
             return context.Response.WriteAsync(result);
         }

@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
+using TraineeManagement.Api.Constants;
+using TraineeManagement.Api.Exceptions;
 
 namespace TraineeManagement.Api.Services
 {
@@ -20,7 +22,7 @@ namespace TraineeManagement.Api.Services
             _logger = logger;
         }
 
-        public SubmissionResponse MapToResponse(Submission submission)
+        private SubmissionResponse MapToResponse(Submission submission)
         {
             return new SubmissionResponse
             {
@@ -39,7 +41,7 @@ namespace TraineeManagement.Api.Services
             TaskAssignment? taskAssignment = await _context.TaskAssignments
                                     .Include(taskAssignment => taskAssignment.LearningTask)
                                     .FirstOrDefaultAsync(taskAssignment => taskAssignment.Id == request.TaskAssignmentId);
-            if (taskAssignment == null) throw new ArgumentException($"Task Assignment {request.TaskAssignmentId} not found.");
+            if (taskAssignment == null) throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
 
             Submission submission = new Submission
             {

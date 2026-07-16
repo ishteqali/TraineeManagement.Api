@@ -14,5 +14,6 @@ namespace TraineeManagement.Api.Models
         public required string Notes { get; set; }
         public DateTime SubmittedDate { get; set; }
         public SubmissionStatus Status { get; set; }
+        public ICollection<SubmissionFile> Files = new List<SubmissionFile>();
     }
 }

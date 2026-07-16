@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
+using TraineeManagement.Api.Constants;
+using TraineeManagement.Api.Exceptions;
+
 
 namespace TraineeManagement.Api.Services
 {
@@ -19,7 +22,7 @@ namespace TraineeManagement.Api.Services
             _context = context;
             _logger = logger;
         }
-        public TaskAssignmentResponse MapToResponse(TaskAssignment taskAssignment)
+        private TaskAssignmentResponse MapToResponse(TaskAssignment taskAssignment)
         {
             return new TaskAssignmentResponse
             {
@@ -41,13 +44,13 @@ namespace TraineeManagement.Api.Services
         {
             // Checking Trainee, Mentor and Task Exists or not
             Trainee? trainee = await _context.Trainees.FindAsync(request.TraineeId);
-            if (trainee == null) throw new ArgumentException($"Trainee with ID: {request.TraineeId} not exists");
+            if (trainee == null) throw new NotFoundException(ExceptionMessages.TrianeeNotFound(request.TraineeId));
 
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor == null) throw new ArgumentException($"Mentor with ID: {request.TraineeId} not exists");
+            if (mentor == null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(request.LearningTaskId);
-            if (learningTask == null) throw new ArgumentException($"Trainee with ID: {request.TraineeId} not exists");
+            if (learningTask == null) throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
 
             TaskAssignment newTaskAssignment = new TaskAssignment
             {

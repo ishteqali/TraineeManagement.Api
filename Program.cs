@@ -10,6 +10,8 @@ using Serilog; // for logging
 using dotenv.net;
 using Microsoft.AspNetCore.Mvc;
 using TraineeManagement.Api.Middleware;
+using TraineeManagement.Api.Configurations;
+using Microsoft.AspNetCore.Http.Features;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +35,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:3000",
-            "http://localhost:5173")
+            "http://localhost:5173", "http://localhost:5119","http://127.0.0.1:5119")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -107,6 +109,21 @@ builder.Services.AddSwaggerGen(options =>
             [new OpenApiSecuritySchemeReference("Bearer", document)] = []
         });
 });
+
+builder.Services.Configure<FileStorageOptions>(
+    builder.Configuration.GetSection(FileStorageOptions.SectionName)
+);
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
+});
+
 builder.Services.AddScoped<ITraineeService, TraineeService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMentorService, MentorService>();
@@ -114,6 +131,10 @@ builder.Services.AddScoped<ILearningTaskService, LearningTaskService>();
 builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
+
+
 
 WebApplication? app = builder.Build();
 
