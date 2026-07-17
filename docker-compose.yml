@@ -7,8 +7,16 @@ services:
     ports:
       - "6379:6379"
 
-    volumes:
-      - redis_data:/data
 
-volumes:
-  redis_data:
+  rabbitmq:
+    image: docker-registry-002.zeuslearning.com/zeuslearning/rabbitmq:3-management
+    container_name: trainee_rabbitmq
+    restart: unless-stopped
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: user@123
