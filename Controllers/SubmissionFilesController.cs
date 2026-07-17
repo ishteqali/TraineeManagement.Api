@@ -21,16 +21,16 @@ namespace TraineeManagement.Api.Controllers
             _submissionFileService = submissionFileService;
             _logger = logger;
         }
+
         [HttpPost("submissions/{submissionId:int}/files")]
-        public async Task<ActionResult<SubmissionFileResponse>> Upload(int submissionId, [FromForm] UploadSubmissionFileRequest request,
+        public async Task<ActionResult<SubmissionAcceptedResponse>> Upload(int submissionId, [FromForm] UploadSubmissionFileRequest request,
             CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Reached in Controller");
             int uploadedBy = 1; // Temporary
 
-            SubmissionFileResponse response = await _submissionFileService.UploadAsync(submissionId, request, uploadedBy, cancellationToken);
+            SubmissionAcceptedResponse response = await _submissionFileService.UploadAsync(submissionId, request, uploadedBy, cancellationToken);
 
-            return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+            return Accepted(response);
         }
 
         [HttpGet("submissions/{id:int}/files")]

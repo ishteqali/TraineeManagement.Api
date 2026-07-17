@@ -18,5 +18,5 @@ services:
       - "15672:15672"
 
     environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: user@123
+      RABBITMQ_DEFAULT_USER: ${RabbitMQ__Username}
+      RABBITMQ_DEFAULT_PASS: ${RabbitMQ__Password}

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
+using TraineeManagement.Api.Contracts;
 
 namespace TraineeManagement.Api.Services
 {
@@ -17,14 +18,16 @@ namespace TraineeManagement.Api.Services
         private readonly IFileStorageService _fileStorageService;
         private readonly FileStorageOptions _options;
         private readonly ILogger<SubmissionFileService> _logger;
+        private readonly IMessagePublisher _messagePublisher;
 
         public SubmissionFileService(AppDbContext context, IFileStorageService fileStorageService,
-            ILogger<SubmissionFileService> logger, IOptions<FileStorageOptions> options)
+            ILogger<SubmissionFileService> logger, IOptions<FileStorageOptions> options, IMessagePublisher messagePublisher)
         {
             _context = context;
             _fileStorageService = fileStorageService;
             _logger = logger;
             _options = options.Value;
+            _messagePublisher = messagePublisher;
         }
 
         public async Task<SubmissionFileResponse> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -45,7 +48,7 @@ namespace TraineeManagement.Api.Services
             return MapToResponse(submissionFile);
         }
 
-        public async Task<SubmissionFileResponse> UploadAsync(int submissionId, UploadSubmissionFileRequest request,
+        public async Task<SubmissionAcceptedResponse> UploadAsync(int submissionId, UploadSubmissionFileRequest request,
             int uploadedBy, CancellationToken cancellationToken = default)
         {
             await ValidateSubmissionExistsAsync(submissionId, cancellationToken);
@@ -58,24 +61,45 @@ namespace TraineeManagement.Api.Services
                 request.File.OpenReadStream(),
                 extension,
                 cancellationToken);
-
+            SubmissionFile submissionFile;
             try
             {
-                SubmissionFile? submissionFile = CreateSubmissionFile(submissionId, request, storageFileName, uploadedBy);
+                submissionFile = CreateSubmissionFile(submissionId, request, storageFileName, uploadedBy);
 
                 _context.SubmissionFiles.Add(submissionFile);
-
                 await _context.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation($"File {submissionFile.OriginalFileName} uploaded successfully for Submission {submissionId}");
-
-                return MapToResponse(submissionFile);
             }
             catch
             {
                 await _fileStorageService.DeleteAsync(storageFileName, cancellationToken);
                 throw;
             }
+            SubmissionProcessingRequested message = new()
+            {
+                MessageId = Guid.NewGuid(),
+                CorrelationId = Guid.NewGuid(),
+                SubmissionId = submissionId,
+                FileId = submissionFile.Id,
+                RequestedAt = DateTime.UtcNow,
+                ContractVersion = "1.0"
+            };
+
+            bool published = await _messagePublisher.PublishSubmissionProcessingAsync(message, cancellationToken);
+
+            if (!published)
+            {
+                _logger.LogError("RabbitMQ publish failed. SubmissionId: {submissionId}", submissionId);
+
+                throw new Exception("Submission saved but could not be queued for processing.");
+            }
+
+            _logger.LogInformation($"Submission queued successfully. MessageId: {message.MessageId}, CorrelationId: {message.CorrelationId}, SubmissionId: {submissionId}");
+
+            return new SubmissionAcceptedResponse
+            {
+                TrackingId = message.CorrelationId,
+                Message = "Submission accepted for processing."
+            };
         }
 
         public async Task<DownloadSubmissionFileResponse> DownloadAsync(int id, CancellationToken cancellationToken = default)
