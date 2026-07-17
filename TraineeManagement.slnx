@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="TraineeManagement.Api/TraineeManagement.Api.csproj" />
+  <Project Path="TraineeManagement.Shared/TraineeManagement.Shared.csproj" />
+  <Project Path="TraineeManagement.Worker/TraineeManagement.Worker.csproj" />
+</Solution>
