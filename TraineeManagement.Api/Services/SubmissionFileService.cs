@@ -1,14 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using TraineeManagement.Api.Data;
+using TraineeManagement.Shared.Data;
 using TraineeManagement.Api.DTOs;
 using TraineeManagement.Api.Interfaces;
-using TraineeManagement.Api.Models;
+using TraineeManagement.Shared.Models;
 using TraineeManagement.Api.Configurations;
 using Microsoft.Extensions.Options;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
-using TraineeManagement.Api.Contracts;
+using TraineeManagement.Shared.Contracts;
+using TraineeManagement.Shared.Enums;
 
 namespace TraineeManagement.Api.Services
 {
@@ -34,9 +35,7 @@ namespace TraineeManagement.Api.Services
         {
             SubmissionFile? submissionFile = await _context.SubmissionFiles
                 .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    subFile => subFile.Id == id,
-                    cancellationToken);
+                .FirstOrDefaultAsync(subFile => subFile.Id == id, cancellationToken);
 
             if (submissionFile == null)
             {
@@ -84,12 +83,29 @@ namespace TraineeManagement.Api.Services
                 ContractVersion = "1.0"
             };
 
+            ProcessingJob processingJob = new()
+            {
+                SubmissionId = submissionId,
+                SubmissionFileId = submissionFile.Id,
+                MessageId = message.MessageId,
+                CorrelationId = message.CorrelationId,
+                Status = ProcessingStatus.Queued,
+                Attempts = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.ProcessingJobs.Add(processingJob);
+
+            await _context.SaveChangesAsync(cancellationToken);
+
             bool published = await _messagePublisher.PublishSubmissionProcessingAsync(message, cancellationToken);
 
             if (!published)
             {
+                processingJob.Status = ProcessingStatus.Failed;
+                processingJob.ErrorSummary = "Failed to publish message to RabbitMQ";
+                 await _context.SaveChangesAsync(cancellationToken);
                 _logger.LogError("RabbitMQ publish failed. SubmissionId: {submissionId}", submissionId);
-
                 throw new Exception("Submission saved but could not be queued for processing.");
             }
 

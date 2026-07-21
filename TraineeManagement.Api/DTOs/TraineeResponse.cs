@@ -1,5 +1,5 @@
 using System.Data.Common;
-using TraineeManagement.Api.Enums;
+using TraineeManagement.Shared.Enums;
 namespace TraineeManagement.Api.DTOs
 {
     public class TraineeResponse

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TraineeManagement.Api.DTOs;
 using TraineeManagement.Api.Interfaces;
 using System.Threading.Tasks;
-using TraineeManagement.Api.Data;
+using TraineeManagement.Shared.Data;
 
 namespace TraineeManagement.Api.Controllers
 {

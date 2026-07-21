@@ -5,11 +5,12 @@ using System.Linq;
 using TraineeManagement.Api.DTOs;
 using System.Threading.Tasks;
 using TraineeManagement.Api.Interfaces;
+using TraineeManagement.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 
 namespace TraineeManagementApi.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     [ApiController]
     [Route("api/mentors")]
     public class MentorsController : ControllerBase
@@ -33,6 +34,10 @@ namespace TraineeManagementApi.Controllers
         {
 
             PagedResponse<MentorResponse>? mentors = await _mentorService.GetMentorsAsync(pageNumber, pageSize, search, status);
+            if (mentors is null)
+            {
+                _logger.LogInformation("Unable to fetch any Mentors");
+            }
             return Ok(mentors);
         }
 

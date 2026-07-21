@@ -2,8 +2,8 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using TraineeManagement.Api.Configurations;
-using TraineeManagement.Api.Contracts;
+using TraineeManagement.Shared.Configurations;
+using TraineeManagement.Shared.Contracts;
 using TraineeManagement.Api.Interfaces;
 
 namespace TraineeManagement.Api.Services
@@ -36,12 +36,17 @@ namespace TraineeManagement.Api.Services
 
                 await using IChannel channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
+                Dictionary<string, object?> arguments = new()
+                {
+                    { "x-dead-letter-exchange", _options.DeadLetterExchange },
+                    { "x-dead-letter-routing-key", _options.DeadLetterQueue }
+                };
                 await channel.QueueDeclareAsync(
                     queue: _options.QueueName,
                     durable: true,
                     exclusive: false,
                     autoDelete: false,
-                    arguments: null,
+                    arguments: arguments,
                     cancellationToken: cancellationToken);
 
                 byte[] body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));

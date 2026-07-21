@@ -5,11 +5,12 @@ using System.Linq;
 using TraineeManagement.Api.DTOs;
 using System.Threading.Tasks;
 using TraineeManagement.Api.Interfaces;
+using TraineeManagement.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 
 namespace TraineeManagementApi.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     [ApiController]
     [Route("api/learning-tasks")]
     public class LearningTasksController : ControllerBase
@@ -33,6 +34,10 @@ namespace TraineeManagementApi.Controllers
         {
 
             PagedResponse<LearningTaskResponse>? learningTasks = await _learningTaskService.GetLearningTasksAsync(pageNumber, pageSize, search, status);
+            if(learningTasks is null)
+            {
+                _logger.LogInformation("Unable to fetch any Learning Tasks");
+            }
             return Ok(learningTasks);
         }
 

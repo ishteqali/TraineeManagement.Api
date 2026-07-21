@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using TraineeManagement.Api.Enums;
+using TraineeManagement.Shared.Enums;
 namespace TraineeManagement.Api.DTOs
 {
     public class SubmissionResponse

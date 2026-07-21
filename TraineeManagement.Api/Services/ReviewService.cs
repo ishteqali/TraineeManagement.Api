@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using TraineeManagement.Api.DTOs;
 using TraineeManagement.Api.Interfaces;
-using TraineeManagement.Api.Models;
-using TraineeManagement.Api.Data;
-using TraineeManagement.Api.Enums;
+using TraineeManagement.Shared.Models;
+using TraineeManagement.Shared.Data;
+using TraineeManagement.Shared.Enums;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
 

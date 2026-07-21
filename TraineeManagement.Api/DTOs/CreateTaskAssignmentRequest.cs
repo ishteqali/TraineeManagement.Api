@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using TraineeManagement.Api.Enums;
+using TraineeManagement.Shared.Enums;
 namespace TraineeManagement.Api.DTOs
 {
     public class CreateTaskAssignmentRequest : IValidatableObject

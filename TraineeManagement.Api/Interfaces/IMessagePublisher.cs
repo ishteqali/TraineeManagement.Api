@@ -1,4 +1,4 @@
-using TraineeManagement.Api.Contracts;
+using TraineeManagement.Shared.Contracts;
 
 namespace TraineeManagement.Api.Interfaces
 {

@@ -6,13 +6,16 @@ namespace TraineeManagement.Api.Controllers
     [Route("api/health")]
     public class HealthController : ControllerBase
     {
+        private const string Running = "Running";
+        private const string ApplicationName = "Trainee Management API";
+
         [HttpGet]
         public IActionResult GetHealth()
         {
             return Ok(new
             {
-                status = "running",
-                application = "Trainee Management API",
+                status = Running,
+                application = ApplicationName,
                 timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")
             });
         }

@@ -42,14 +42,14 @@ namespace TraineeManagement.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SubmissionResponse>>> GetAllSubmissions()
         {
-            var submissions = await _submissionService.GetAllSubmissionsAsync();
+            IEnumerable<SubmissionResponse>? submissions = await _submissionService.GetAllSubmissionsAsync();
             return Ok(submissions);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<SubmissionResponse>> GetSubmissionById(int id)
         {
-            var submission = await _submissionService.GetSubmissionByIdAsync(id);
+            SubmissionResponse? submission = await _submissionService.GetSubmissionByIdAsync(id);
             if (submission == null)
             {
                 _logger.LogWarning("Submission {Id} was not found.", id);

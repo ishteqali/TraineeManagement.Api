@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Services;
-using TraineeManagement.Api.Data;
+using TraineeManagement.Shared.Data;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -14,6 +14,7 @@ using TraineeManagement.Api.Configurations;
 using Microsoft.AspNetCore.Http.Features;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using TraineeManagement.Shared.Configurations;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -148,6 +149,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
+builder.Services.AddScoped<IProcessingJobService, ProcessingJobService>();
 
 
 WebApplication? app = builder.Build();

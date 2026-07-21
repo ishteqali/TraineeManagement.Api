@@ -1,7 +1,7 @@
 using TraineeManagement.Api.DTOs;
-using TraineeManagement.Api.Enums;
-using TraineeManagement.Api.Models;
-using TraineeManagement.Api.Data;
+using TraineeManagement.Shared.Enums;
+using TraineeManagement.Shared.Models;
+using TraineeManagement.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;

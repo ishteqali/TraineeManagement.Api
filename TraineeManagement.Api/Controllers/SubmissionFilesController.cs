@@ -33,7 +33,7 @@ namespace TraineeManagement.Api.Controllers
             return Accepted(response);
         }
 
-        [HttpGet("submissions/{id:int}/files")]
+        [HttpGet("submission-files/{id:int}")]
         public async Task<ActionResult<SubmissionFileResponse>> GetById(int id, CancellationToken cancellationToken)
         {
             SubmissionFileResponse response = await _submissionFileService.GetByIdAsync(id, cancellationToken);
