@@ -6,10 +6,11 @@ using TraineeManagement.Api.DTOs;
 using System.Threading.Tasks;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using TraineeManagement.Shared.Enums;
 
 namespace TraineeManagementApi.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     [ApiController]
     [Route("api/trainee")]
     public class TraineesController : ControllerBase
@@ -33,6 +34,10 @@ namespace TraineeManagementApi.Controllers
         {
 
             PagedResponse<TraineeResponse>? trainees = await _traineeService.GetTraineesAsync(pageNumber, pageSize, search, status);
+            if (trainees is null)
+            {
+                _logger.LogInformation("Unable to fetch any Trainees");
+            }
             return Ok(trainees);
         }
 
@@ -40,9 +45,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult<TraineeResponse>> GetById(int id)
         {
             TraineeResponse? trainee = await _traineeService.GetTraineeByIdAsync(id);
-            if (trainee == null)
+            if (trainee is null)
             {
-                _logger.LogWarning($"Trainee with ID: {id} not found");
+                _logger.LogWarning("Trainee with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(trainee);
@@ -60,9 +65,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult> Update(int id, UpdateTraineeRequest request)
         {
             TraineeResponse? updatedTrainee = await _traineeService.UpdateTraineeAsync(id, request);
-            if (updatedTrainee == null)
+            if (updatedTrainee is null)
             {
-                _logger.LogWarning($"Trainee with ID: {id} not found");
+                _logger.LogWarning("Trainee with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(updatedTrainee);
@@ -74,7 +79,7 @@ namespace TraineeManagementApi.Controllers
             bool isDeleted = await _traineeService.DeleteTraineeAsync(id);
             if (!isDeleted)
             {
-                _logger.LogWarning($"Trainee with ID: {id} not found");
+                _logger.LogWarning("Trainee with ID: {id} not found", id);
                 return NotFound();
             }
             return NoContent();

@@ -45,9 +45,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult<MentorResponse>> GetById(int id)
         {
             MentorResponse? mentor = await _mentorService.GetMentorByIdAsync(id);
-            if (mentor == null)
+            if (mentor is null)
             {
-                _logger.LogWarning($"Mentor with ID: {id} not found");
+                _logger.LogWarning("Mentor with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(mentor);
@@ -65,9 +65,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult> Update(int id, UpdateMentorRequest request)
         {
             MentorResponse? updatedMentor = await _mentorService.UpdateMentorAsync(id, request);
-            if (updatedMentor == null)
+            if (updatedMentor is null)
             {
-                _logger.LogWarning($"Mentor with ID: {id} not found");
+                _logger.LogWarning("Mentor with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(updatedMentor);
@@ -79,7 +79,7 @@ namespace TraineeManagementApi.Controllers
             bool isDeleted = await _mentorService.DeleteMentorAsync(id);
             if (!isDeleted)
             {
-                _logger.LogWarning($"Mentor with ID: {id} not found");
+                _logger.LogWarning("Mentor with ID: {id} not found", id);
                 return NotFound();
             }
             return NoContent();

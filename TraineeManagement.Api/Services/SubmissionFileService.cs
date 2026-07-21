@@ -31,18 +31,19 @@ namespace TraineeManagement.Api.Services
             _messagePublisher = messagePublisher;
         }
 
+        private const int BytesPerUnit = 1024;
+
         public async Task<SubmissionFileResponse> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             SubmissionFile? submissionFile = await _context.SubmissionFiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(subFile => subFile.Id == id, cancellationToken);
 
-            if (submissionFile == null)
+            if (submissionFile is null)
             {
-                _logger.LogWarning($"Submission file with Id: {id} was not found.");
                 throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             }
-            _logger.LogInformation($"Retrieved submission file with Id: {id}.");
+            _logger.LogInformation("Retrieved submission file with Id: {id}.", id);
 
             return MapToResponse(submissionFile);
         }
@@ -104,12 +105,13 @@ namespace TraineeManagement.Api.Services
             {
                 processingJob.Status = ProcessingStatus.Failed;
                 processingJob.ErrorSummary = "Failed to publish message to RabbitMQ";
-                 await _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
                 _logger.LogError("RabbitMQ publish failed. SubmissionId: {submissionId}", submissionId);
-                throw new Exception("Submission saved but could not be queued for processing.");
+                throw new BadRequestException(ExceptionMessages.RabbitMQPublishFailed);
             }
 
-            _logger.LogInformation($"Submission queued successfully. MessageId: {message.MessageId}, CorrelationId: {message.CorrelationId}, SubmissionId: {submissionId}");
+            _logger.LogInformation("Submission queued successfully. MessageId: {MessageId}, CorrelationId: {CorrelationId}, SubmissionId: {SubmissionId}",
+                message.MessageId, message.CorrelationId, submissionId);
 
             return new SubmissionAcceptedResponse
             {
@@ -126,7 +128,7 @@ namespace TraineeManagement.Api.Services
                     subFile => subFile.Id == id,
                     cancellationToken);
 
-            if (submissionFile == null)
+            if (submissionFile is null)
             {
                 throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             }
@@ -147,7 +149,7 @@ namespace TraineeManagement.Api.Services
                     subFile => subFile.Id == id,
                     cancellationToken);
 
-            if (submissionFile == null)
+            if (submissionFile is null)
             {
                 throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             }
@@ -158,7 +160,7 @@ namespace TraineeManagement.Api.Services
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation($"Submission file {id} deleted.");
+            _logger.LogInformation("Submission file {id} deleted.", id);
         }
 
         private static SubmissionFileResponse MapToResponse(SubmissionFile submissionFile)
@@ -180,15 +182,14 @@ namespace TraineeManagement.Api.Services
                     s => s.Id == submissionId,
                     cancellationToken);
 
-            if (submission == null)
+            if (submission is null)
             {
-                _logger.LogWarning($"Submission with Id: {submissionId} not found.");
                 throw new NotFoundException(ExceptionMessages.SubmissionNotFound(submissionId));
             }
         }
         private void ValidateFile(IFormFile file)
         {
-            if (file == null)
+            if (file is null)
             {
                 throw new BadRequestException(ExceptionMessages.EmptyFile);
             }
@@ -200,9 +201,9 @@ namespace TraineeManagement.Api.Services
 
             if (!_options.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                throw new BadRequestException("File type is not supported.");
+                throw new BadRequestException(ExceptionMessages.InvalidFileType);
             }
-            if (file.Length > _options.MaxFileSizeInMB * 1024 * 1024)
+            if (file.Length > _options.MaxFileSizeInMB * BytesPerUnit * BytesPerUnit)
             {
                 throw new BadRequestException(ExceptionMessages.FileTooLarge);
             }

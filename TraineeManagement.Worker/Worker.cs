@@ -111,7 +111,7 @@ namespace TraineeManagement.Worker
 
                     SubmissionProcessingRequested? message = JsonSerializer.Deserialize<SubmissionProcessingRequested>(json);
 
-                    if (message == null)
+                    if (message is null)
                     {
                         _logger.LogWarning("Received an invalid message.");
                         await _channel!.BasicRejectAsync(

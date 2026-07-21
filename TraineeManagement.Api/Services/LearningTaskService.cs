@@ -4,6 +4,7 @@ using TraineeManagement.Shared.Models;
 using TraineeManagement.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
+using TraineeManagement.Api.Helpers;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 
@@ -90,7 +91,7 @@ namespace TraineeManagement.Api.Services
         public async Task<LearningTaskResponse?> GetLearningTaskByIdAsync(int id)
         {
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(id);
-            if (learningTask == null) return null;
+            if (learningTask is null) return null;
             return MapToResponse(learningTask);
         }
 
@@ -102,42 +103,45 @@ namespace TraineeManagement.Api.Services
                 Description = request.Description,
                 ExpectedTechStack = request.ExpectedTechStack,
                 DueDate = request.DueDate,
-                Status = Enum.Parse<LearningTaskStatus>(request.Status!.ToString(), ignoreCase: true),
+                Status = EnumHelper.ParseOrThrow<LearningTaskStatus>(request.Status, nameof(request.Status)),
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
 
             await _context.LearningTasks.AddAsync(newLearningTask);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Learning Task Created Successfully with ID: {newLearningTask.Id} at Timestamp: {newLearningTask.CreatedDate}");
+            _logger.LogInformation("Learning Task Created Successfully with ID: {taskid} at Timestamp: {createdDate}",
+                newLearningTask.Id, newLearningTask.CreatedDate);
             return MapToResponse(newLearningTask);
         }
 
         public async Task<LearningTaskResponse?> UpdateLearningTaskAsync(int id, UpdateLearningTaskRequest request)
         {
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(id);
-            if (learningTask == null) return null;
+            if (learningTask is null) return null;
 
             learningTask.Title = request.Title;
             learningTask.Description = request.Description;
             learningTask.ExpectedTechStack = request.ExpectedTechStack;
             learningTask.DueDate = request.DueDate;
-            learningTask.Status = Enum.Parse<LearningTaskStatus>(request.Status!.ToString(), ignoreCase: true);
+            learningTask.Status = EnumHelper.ParseOrThrow<LearningTaskStatus>(request.Status, nameof(request.Status));
             learningTask.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Learning Task with ID: {learningTask.Id} was successfully updated at Timestamp: {learningTask.UpdatedDate} UTC");
+            _logger.LogInformation("Learning Task with ID: {taskId} was successfully updated at Timestamp: {updatedDate} UTC",
+            learningTask.Id, learningTask.UpdatedDate);
             return MapToResponse(learningTask);
         }
 
         public async Task<bool> DeleteLearningTaskAsync(int id)
         {
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(id);
-            if (learningTask == null) return false;
+            if (learningTask is null) return false;
 
             _context.LearningTasks.Remove(learningTask);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Learning Task with ID: {learningTask.Id} was successfully deleted at Timestamp: {DateTime.UtcNow} UTC");
+            _logger.LogInformation("Learning Task with ID: {learningTask.Id} was successfully deleted at Timestamp: {DateTime.UtcNow} UTC",
+            learningTask.Id, DateTime.UtcNow);
             return true;
         }
     }

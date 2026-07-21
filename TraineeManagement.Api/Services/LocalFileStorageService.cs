@@ -62,7 +62,7 @@ namespace TraineeManagement.Api.Services
 
             if (!File.Exists(filePath))
             {
-                throw new NotFoundException($"File '{storageFileName}' was not found.");
+                throw new NotFoundException(ExceptionMessages.FileNotFound);
             }
 
             Stream stream = new FileStream(

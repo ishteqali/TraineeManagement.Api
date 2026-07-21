@@ -31,7 +31,7 @@ public class SubmissionProcessorService : ISubmissionProcessorService
                 p => p.MessageId == message.MessageId || p.SubmissionFileId == message.FileId,
                 cancellationToken);
 
-            if (processingJob == null)
+            if (processingJob is null)
             {
                 _logger.LogWarning("ProcessingJob not found.");
 
@@ -54,7 +54,7 @@ public class SubmissionProcessorService : ISubmissionProcessorService
                 s => s.Id == processingJob.SubmissionFileId,
                 cancellationToken);
 
-            if (submissionFile == null)
+            if (submissionFile is null)
             {
                 throw new FileNotFoundException("Submission file not found.");
             }
@@ -86,7 +86,7 @@ public class SubmissionProcessorService : ISubmissionProcessorService
                 p => p.MessageId == message.MessageId,
                 cancellationToken);
 
-        if (processingJob == null)
+        if (processingJob is null)
             return ProcessingResultStatus.DeadLetter;
 
         processingJob.Attempts++;

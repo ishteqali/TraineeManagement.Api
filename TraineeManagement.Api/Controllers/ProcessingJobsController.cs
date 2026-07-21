@@ -11,10 +11,12 @@ namespace TraineeManagement.Api.Controllers
     public class ProcessingJobsController : ControllerBase
     {
         private readonly IProcessingJobService _processingJobService;
+        private readonly ILogger<ProcessingJobsController> _logger;
 
-        public ProcessingJobsController(IProcessingJobService processingJobService)
+        public ProcessingJobsController(IProcessingJobService processingJobService, ILogger<ProcessingJobsController> logger)
         {
             _processingJobService = processingJobService;
+            _logger = logger;
         }
 
         [HttpGet("{id:int}")]

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.DTOs;
 using TraineeManagement.Api.Exceptions;
 using TraineeManagement.Api.Interfaces;
@@ -23,9 +24,9 @@ namespace TraineeManagement.Api.Services
                     p => p.Id == id,
                     cancellationToken);
 
-            if (job == null)
+            if (job is null)
             {
-                throw new NotFoundException($"Processing Job {id} not found.");
+                throw new NotFoundException(ExceptionMessages.JobProcessingNotFound(id));
             }
 
             return new ProcessingJobResponse

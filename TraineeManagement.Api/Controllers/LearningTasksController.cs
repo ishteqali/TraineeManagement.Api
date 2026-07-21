@@ -34,7 +34,7 @@ namespace TraineeManagementApi.Controllers
         {
 
             PagedResponse<LearningTaskResponse>? learningTasks = await _learningTaskService.GetLearningTasksAsync(pageNumber, pageSize, search, status);
-            if(learningTasks is null)
+            if (learningTasks is null)
             {
                 _logger.LogInformation("Unable to fetch any Learning Tasks");
             }
@@ -45,9 +45,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult<LearningTaskResponse>> GetById(int id)
         {
             LearningTaskResponse? learningTask = await _learningTaskService.GetLearningTaskByIdAsync(id);
-            if (learningTask == null)
+            if (learningTask is null)
             {
-                _logger.LogWarning($"Learning Task with ID: {id} not found");
+                _logger.LogWarning("Learning Task with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(learningTask);
@@ -65,9 +65,9 @@ namespace TraineeManagementApi.Controllers
         public async Task<ActionResult> Update(int id, UpdateLearningTaskRequest request)
         {
             LearningTaskResponse? updatedLearningTask = await _learningTaskService.UpdateLearningTaskAsync(id, request);
-            if (updatedLearningTask == null)
+            if (updatedLearningTask is null)
             {
-                _logger.LogWarning($"Learning Task with ID: {id} not found");
+                _logger.LogWarning("Learning Task with ID: {id} not found", id);
                 return NotFound();
             }
             return Ok(updatedLearningTask);
@@ -79,7 +79,7 @@ namespace TraineeManagementApi.Controllers
             bool isDeleted = await _learningTaskService.DeleteLearningTaskAsync(id);
             if (!isDeleted)
             {
-                _logger.LogWarning($"Learning Task with ID: {id} not found");
+                _logger.LogWarning("Learning Task with ID: {id} not found", id);
                 return NotFound();
             }
             return NoContent();

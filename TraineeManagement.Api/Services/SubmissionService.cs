@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
+using TraineeManagement.Api.Helpers;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
@@ -45,7 +46,7 @@ namespace TraineeManagement.Api.Services
             TaskAssignment? taskAssignment = await _context.TaskAssignments
                                     .Include(taskAssignment => taskAssignment.LearningTask)
                                     .FirstOrDefaultAsync(taskAssignment => taskAssignment.Id == request.TaskAssignmentId);
-            if (taskAssignment == null) throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
+            if (taskAssignment is null) throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
 
             Submission submission = new Submission
             {
@@ -53,13 +54,15 @@ namespace TraineeManagement.Api.Services
                 SubmissionUrl = request.SubmissionUrl,
                 Notes = request.Notes,
                 SubmittedDate = DateTime.UtcNow,
-                Status = Enum.Parse<SubmissionStatus>(request.Status!.ToString(), ignoreCase: true),
+                Status = EnumHelper.ParseOrThrow<SubmissionStatus>(request.Status, nameof(request.Status)),
                 TaskAssignment = taskAssignment
             };
 
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Submission Created Successfully with ID: {submission.Id} at Timestamp: {DateTime.UtcNow}");
+            _logger.LogInformation("Submission Created Successfully with ID: {SubmissionId} at Timestamp: {Timestamp}",
+                submission.Id, DateTime.UtcNow);
+
 
             return MapToResponse(submission);
         }
@@ -95,12 +98,12 @@ namespace TraineeManagement.Api.Services
                 .Include(s => s.TaskAssignment)
                 .ThenInclude(ta => ta.LearningTask)
                 .FirstOrDefaultAsync(s => s.Id == id);
-            if (submission == null)
+            if (submission is null)
             {
                 return null;
             }
             SubmissionResponse response = MapToResponse(submission);
-            
+
             DistributedCacheEntryOptions cacheOptions = new()
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
@@ -110,10 +113,7 @@ namespace TraineeManagement.Api.Services
 
             try
             {
-                await _cache.SetStringAsync(
-                    cacheKey,
-                    serializedResponse,
-                    cacheOptions);
+                await _cache.SetStringAsync(cacheKey, serializedResponse, cacheOptions);
             }
             catch (Exception ex)
             {

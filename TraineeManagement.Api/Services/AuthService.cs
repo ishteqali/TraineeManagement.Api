@@ -23,7 +23,7 @@ namespace TraineeManagement.Api.Services
         public async Task<LoginResponse?> LoginAsync(LoginRequest request)
         {
             User? user = await _context.Users.FirstOrDefaultAsync(existingUser => existingUser.Username == request.Username);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return null;
             }

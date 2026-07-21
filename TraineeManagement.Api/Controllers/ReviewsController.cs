@@ -50,7 +50,7 @@ namespace TraineeManagement.Api.Controllers
         public async Task<ActionResult<ReviewResponse>> GetReviewById(int id)
         {
             ReviewResponse? review = await _reviewService.GetReviewByIdAsync(id);
-            if (review == null)
+            if (review is null)
             {
                 _logger.LogWarning("Review {Id} was not found.", id);
                 return NotFound();

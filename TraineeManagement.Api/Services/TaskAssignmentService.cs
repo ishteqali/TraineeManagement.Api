@@ -10,6 +10,7 @@ using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using TraineeManagement.Api.Helpers;
 
 namespace TraineeManagement.Api.Services
 {
@@ -47,13 +48,13 @@ namespace TraineeManagement.Api.Services
         {
             // Checking Trainee, Mentor and Task Exists or not
             Trainee? trainee = await _context.Trainees.FindAsync(request.TraineeId);
-            if (trainee == null) throw new NotFoundException(ExceptionMessages.TrianeeNotFound(request.TraineeId));
+            if (trainee is null) throw new NotFoundException(ExceptionMessages.TrianeeNotFound(request.TraineeId));
 
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor == null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
+            if (mentor is null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(request.LearningTaskId);
-            if (learningTask == null) throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
+            if (learningTask is null) throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
 
             TaskAssignment newTaskAssignment = new TaskAssignment
             {
@@ -62,7 +63,7 @@ namespace TraineeManagement.Api.Services
                 LearningTaskId = request.LearningTaskId,
                 AssignedDate = DateTime.UtcNow,
                 DueDate = request.DueDate,
-                Status = Enum.Parse<TaskAssignmentStatus>(request.Status!.ToString(), ignoreCase: true),
+                Status = EnumHelper.ParseOrThrow<TaskAssignmentStatus>(request.Status, nameof(request.Status)),
                 Remarks = request.Remarks,
                 Trainee = trainee,
                 Mentor = mentor,
@@ -70,11 +71,13 @@ namespace TraineeManagement.Api.Services
             };
             _context.TaskAssignments.Add(newTaskAssignment);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Task Assignment Created Successfully with ID: {newTaskAssignment.Id} at Timestamp: {DateTime.UtcNow}");
+            _logger.LogInformation("Task Assignment Created Successfully with ID: {TaskAssignmentId} at Timestamp: {Timestamp}",
+                newTaskAssignment.Id, DateTime.UtcNow);
+
             return MapToResponse(newTaskAssignment);
         }
 
-        public async Task<IEnumerable<TaskAssignmentResponse>> GetAllAssignmentAsnyc()
+        public async Task<IEnumerable<TaskAssignmentResponse>> GetAllAssignmentAsync()
         {
             IEnumerable<TaskAssignment> taskAssignments = await _context.TaskAssignments
                 .Include(taskAssignment => taskAssignment.Trainee)
@@ -108,7 +111,7 @@ namespace TraineeManagement.Api.Services
                 .Include(task => task.LearningTask)
                 .FirstOrDefaultAsync(task => task.Id == id);
 
-            if (taskAssignment == null)
+            if (taskAssignment is null)
             {
                 return null;
             }
@@ -137,14 +140,16 @@ namespace TraineeManagement.Api.Services
         public async Task<bool> UpdateStatusAsync(int id, string status)
         {
             TaskAssignment? taskAssignment = await _context.TaskAssignments.FindAsync(id);
-            if (taskAssignment == null)
+            if (taskAssignment is null)
             {
                 return false;
             }
 
-            taskAssignment.Status = Enum.Parse<TaskAssignmentStatus>(status, ignoreCase: true);
+            taskAssignment.Status = EnumHelper.ParseOrThrow<TaskAssignmentStatus>(status, nameof(status));
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Task Assignment status with ID: {id} was successfully updated at Timestamp: {DateTime.UtcNow} UTC");
+            _logger.LogInformation("Task Assignment status with ID: {TaskAssignmentId} was successfully updated at Timestamp: {Timestamp} UTC",
+                id, DateTime.UtcNow);
+
             try
             {
                 await _cache.RemoveAsync(CacheKeys.TaskAssignment(id));

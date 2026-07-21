@@ -4,6 +4,7 @@ using TraineeManagement.Shared.Models;
 using TraineeManagement.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.Interfaces;
+using TraineeManagement.Api.Helpers;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace TraineeManagement.Api.Services
@@ -90,7 +91,7 @@ namespace TraineeManagement.Api.Services
         public async Task<MentorResponse?> GetMentorByIdAsync(int id)
         {
             Mentor? mentor = await _context.Mentors.FindAsync(id);
-            if (mentor == null) return null;
+            if (mentor is null) return null;
             return MapToResponse(mentor);
         }
 
@@ -102,42 +103,45 @@ namespace TraineeManagement.Api.Services
                 LastName = request.LastName,
                 Email = request.Email,
                 Expertise = request.Expertise,
-                Status = Enum.Parse<MentorStatus>(request.Status!.ToString(), ignoreCase: true),
+                Status = EnumHelper.ParseOrThrow<MentorStatus>(request.Status, nameof(request.Status)),
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
 
             await _context.Mentors.AddAsync(newMentor);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Mentor Created Successfully with ID: {newMentor.Id} at Timestamp: {newMentor.CreatedDate}");
+            _logger.LogInformation("Mentor Created Successfully with ID: {mentorId} at Timestamp: {CreatedDate}",
+                newMentor.Id, newMentor.CreatedDate);
             return MapToResponse(newMentor);
         }
 
         public async Task<MentorResponse?> UpdateMentorAsync(int id, UpdateMentorRequest request)
         {
             Mentor? mentor = await _context.Mentors.FindAsync(id);
-            if (mentor == null) return null;
+            if (mentor is null) return null;
 
             mentor.FirstName = request.FirstName;
             mentor.LastName = request.LastName;
             mentor.Email = request.Email;
             mentor.Expertise = request.Expertise;
-            mentor.Status = Enum.Parse<MentorStatus>(request.Status!.ToString(), ignoreCase: true);
+            mentor.Status = EnumHelper.ParseOrThrow<MentorStatus>(request.Status, nameof(request.Status));
             mentor.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Mentor with ID: {mentor.Id} was successfully updated at Timestamp: {mentor.UpdatedDate} UTC");
+            _logger.LogInformation("Mentor with ID: {mentorId} is updated at Timestamp: {CreatedDate}",
+                mentor.Id, mentor.CreatedDate);
             return MapToResponse(mentor);
         }
 
         public async Task<bool> DeleteMentorAsync(int id)
         {
             Mentor? mentor = await _context.Mentors.FindAsync(id);
-            if (mentor == null) return false;
+            if (mentor is null) return false;
 
             _context.Mentors.Remove(mentor);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Mentor with ID: {mentor.Id} was successfully deleted at Timestamp: {DateTime.UtcNow} UTC");
+            _logger.LogInformation("Mentor with ID: {mentorId} is deleted at Timestamp: {CreatedDate}",
+                mentor.Id, mentor.CreatedDate);
             return true;
         }
     }

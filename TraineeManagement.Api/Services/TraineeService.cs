@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using TraineeManagement.Api.Constants;
+using TraineeManagement.Api.Helpers;
 
 namespace TraineeManagement.Api.Services
 {
@@ -110,7 +111,7 @@ namespace TraineeManagement.Api.Services
             }
 
             Trainee? trainee = await _context.Trainees.FindAsync(id);
-            if (trainee == null) return null;
+            if (trainee is null) return null;
             TraineeResponse response = MapToResponse(trainee);
             DistributedCacheEntryOptions cacheOptions = new()
             {
@@ -141,7 +142,7 @@ namespace TraineeManagement.Api.Services
                 LastName = request.LastName,
                 Email = request.Email,
                 TechStack = request.TechStack,
-                Status = Enum.Parse<TraineeStatus>(request.Status!.ToString(), ignoreCase: true),
+                Status = EnumHelper.ParseOrThrow<TraineeStatus>(request.Status, nameof(request.Status)),
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
@@ -155,13 +156,13 @@ namespace TraineeManagement.Api.Services
         public async Task<TraineeResponse?> UpdateTraineeAsync(int id, UpdateTraineeRequest request)
         {
             Trainee? trainee = await _context.Trainees.FindAsync(id);
-            if (trainee == null) return null;
+            if (trainee is null) return null;
 
             trainee.FirstName = request.FirstName;
             trainee.LastName = request.LastName;
             trainee.Email = request.Email;
             trainee.TechStack = request.TechStack;
-            trainee.Status = Enum.Parse<TraineeStatus>(request.Status!.ToString(), ignoreCase: true);
+            trainee.Status = EnumHelper.ParseOrThrow<TraineeStatus>(request.Status, nameof(request.Status));
             trainee.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -180,7 +181,7 @@ namespace TraineeManagement.Api.Services
         public async Task<bool> DeleteTraineeAsync(int id)
         {
             Trainee? trainee = await _context.Trainees.FindAsync(id);
-            if (trainee == null) return false;
+            if (trainee is null) return false;
 
             _context.Trainees.Remove(trainee);
             await _context.SaveChangesAsync();

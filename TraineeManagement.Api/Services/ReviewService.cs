@@ -10,6 +10,7 @@ using TraineeManagement.Shared.Data;
 using TraineeManagement.Shared.Enums;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
+using TraineeManagement.Api.Helpers;
 
 namespace TraineeManagement.Api.Services
 {
@@ -42,10 +43,10 @@ namespace TraineeManagement.Api.Services
         public async Task<ReviewResponse> CreateReviewAsync(CreateReviewRequest request)
         {
             Submission? submission = await _context.Submissions.FindAsync(request.SubmissionId);
-            if (submission == null) throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
+            if (submission is null) throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
 
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor == null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
+            if (mentor is null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
             Review review = new Review
             {
@@ -53,7 +54,7 @@ namespace TraineeManagement.Api.Services
                 MentorId = request.MentorId,
                 Feedback = request.Feedback,
                 Score = request.Score,
-                ReviewStatus = Enum.Parse<ReviewStatus>(request.ReviewStatus!.ToString(), ignoreCase: true),
+                ReviewStatus = EnumHelper.ParseOrThrow<ReviewStatus>(request.ReviewStatus, nameof(request.ReviewStatus)),
                 ReviewedDate = DateTime.UtcNow,
                 Mentor = mentor,
                 Submission = submission
@@ -61,7 +62,9 @@ namespace TraineeManagement.Api.Services
 
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Review Created Successfully with ID: {review.Id} at Timestamp: {DateTime.UtcNow}");
+            _logger.LogInformation("Review Created Successfully with ID: {ReviewId} at Timestamp: {Timestamp}",
+                review.Id, DateTime.UtcNow);
+
             return MapToResponse(review);
         }
 
@@ -81,7 +84,7 @@ namespace TraineeManagement.Api.Services
                 .Include(review => review.Submission)
                 .Include(review => review.Mentor)
                 .FirstOrDefaultAsync(r => r.Id == id);
-            if (review == null)
+            if (review is null)
             {
                 return null;
             }

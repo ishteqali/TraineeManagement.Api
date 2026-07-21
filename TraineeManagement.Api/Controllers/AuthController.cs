@@ -17,7 +17,7 @@ namespace TraineeManagement.Api.Controllers
         {
             _authService = authService;
             _logger = logger;
-        }   
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -25,10 +25,10 @@ namespace TraineeManagement.Api.Controllers
             LoginResponse? response = await _authService.LoginAsync(request);
             if (response == null)
             {
-                _logger.LogWarning($"Failed login attempt for username: {request.Username}");
+                _logger.LogWarning("Failed login attempt for username: {Username}", request.Username);
                 return Unauthorized();
             }
-            _logger.LogInformation($"Successful login for username: {request.Username}");
+            _logger.LogInformation("Successful login for username: {Username}", request.Username);
             return Ok(response);
         }
     }

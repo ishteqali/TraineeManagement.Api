@@ -68,12 +68,14 @@ namespace TraineeManagement.Api.Services
                     body: body,
                     cancellationToken: cancellationToken);
 
-                _logger.LogInformation($"RabbitMQ message published successfully. MessageId: {message.MessageId}, CorrelationId: {message.CorrelationId}, SubmissionId: {message.SubmissionId}");
+                _logger.LogInformation("RabbitMQ message published successfully. MessageId: {MessageId}, CorrelationId: {CorrelationId}, SubmissionId: {SubmissionId}",
+                    message.MessageId, message.CorrelationId, message.SubmissionId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to publish RabbitMQ message. MessageId: {message.MessageId}, CorrelationId: {message.CorrelationId}, SubmissionId: {message.SubmissionId}");
+                _logger.LogError(ex, "Failed to publish RabbitMQ message. MessageId: {MessageId}, CorrelationId: {CorrelationId}, SubmissionId: {SubmissionId}",
+                    message.MessageId, message.CorrelationId, message.SubmissionId);
                 return false;
             }
         }

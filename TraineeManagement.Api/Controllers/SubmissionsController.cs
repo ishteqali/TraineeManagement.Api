@@ -43,6 +43,10 @@ namespace TraineeManagement.Api.Controllers
         public async Task<ActionResult<IEnumerable<SubmissionResponse>>> GetAllSubmissions()
         {
             IEnumerable<SubmissionResponse>? submissions = await _submissionService.GetAllSubmissionsAsync();
+            if(submissions is null)
+            {
+                _logger.LogInformation("No Submissions found");
+            }
             return Ok(submissions);
         }
 
@@ -50,12 +54,12 @@ namespace TraineeManagement.Api.Controllers
         public async Task<ActionResult<SubmissionResponse>> GetSubmissionById(int id)
         {
             SubmissionResponse? submission = await _submissionService.GetSubmissionByIdAsync(id);
-            if (submission == null)
+            if (submission is null)
             {
                 _logger.LogWarning("Submission {Id} was not found.", id);
                 return NotFound();
             }
-
+            _logger.LogInformation("Submission {id} found", id);
             return submission;
         }
     }
