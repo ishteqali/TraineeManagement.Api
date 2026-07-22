@@ -90,21 +90,16 @@ namespace TraineeManagement.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("ExecuteAsyn Started");
-
             await InitializeRabbitMqAsync(stoppingToken);
-
             _logger.LogInformation("RabbitMQ Started");
 
             AsyncEventingBasicConsumer consumer = new(_channel!);
-
             _logger.LogInformation("Consumer Created");
 
 
             consumer.ReceivedAsync += async (sender, eventArgs) =>
             {
                 _logger.LogInformation("Message Received");
-
                 try
                 {
                     string json = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
@@ -130,7 +125,7 @@ namespace TraineeManagement.Worker
                     {
                         case ProcessingResultStatus.Success:
 
-                            await _channel.BasicAckAsync(
+                            await _channel!.BasicAckAsync(
                                 eventArgs.DeliveryTag,
                                 false,
                                 stoppingToken);

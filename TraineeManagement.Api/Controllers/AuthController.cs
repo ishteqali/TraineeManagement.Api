@@ -23,7 +23,7 @@ namespace TraineeManagement.Api.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             LoginResponse? response = await _authService.LoginAsync(request);
-            if (response == null)
+            if (response is null)
             {
                 _logger.LogWarning("Failed login attempt for username: {Username}", request.Username);
                 return Unauthorized();

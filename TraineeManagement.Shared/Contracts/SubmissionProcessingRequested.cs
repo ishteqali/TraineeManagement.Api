@@ -5,7 +5,7 @@ namespace TraineeManagement.Shared.Contracts
         public Guid MessageId { get; init; }
         public Guid CorrelationId { get; init; }
         public int SubmissionId { get; init; }
-        public int FileId { get; init; }
+        public int SubmissionFileId { get; init; }
         public DateTime RequestedAt { get; init; }
         public string ContractVersion { get; init; } = "1.0";
     }

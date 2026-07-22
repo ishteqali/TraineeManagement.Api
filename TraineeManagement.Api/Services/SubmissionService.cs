@@ -95,9 +95,9 @@ namespace TraineeManagement.Api.Services
             }
 
             Submission? submission = await _context.Submissions
-                .Include(s => s.TaskAssignment)
-                .ThenInclude(ta => ta.LearningTask)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .Include(selectSubmission => selectSubmission.TaskAssignment)
+                .ThenInclude(selectTaskAssignment => selectTaskAssignment.LearningTask)
+                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == id);
             if (submission is null)
             {
                 return null;

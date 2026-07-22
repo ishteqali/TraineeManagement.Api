@@ -81,9 +81,9 @@ namespace TraineeManagement.Api.Services
         public async Task<ReviewResponse?> GetReviewByIdAsync(int id)
         {
             Review? review = await _context.Reviews
-                .Include(review => review.Submission)
-                .Include(review => review.Mentor)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .Include(selectReview => selectReview.Submission)
+                .Include(selectReview => selectReview.Mentor)
+                .FirstOrDefaultAsync(currentReview => currentReview.Id == id);
             if (review is null)
             {
                 return null;

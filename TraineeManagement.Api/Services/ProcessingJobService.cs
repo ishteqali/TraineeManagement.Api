@@ -33,7 +33,7 @@ namespace TraineeManagement.Api.Services
             {
                 Id = job.Id,
                 SubmissionId = job.SubmissionId,
-                FileId = job.SubmissionFileId,
+                SubmissionFileId = job.SubmissionFileId,
                 Status = job.Status.ToString(),
                 Attempts = job.Attempts,
                 ErrorSummary = job.ErrorSummary,

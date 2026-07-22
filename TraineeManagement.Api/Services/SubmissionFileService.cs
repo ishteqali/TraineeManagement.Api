@@ -79,7 +79,7 @@ namespace TraineeManagement.Api.Services
                 MessageId = Guid.NewGuid(),
                 CorrelationId = Guid.NewGuid(),
                 SubmissionId = submissionId,
-                FileId = submissionFile.Id,
+                SubmissionFileId = submissionFile.Id,
                 RequestedAt = DateTime.UtcNow,
                 ContractVersion = "1.0"
             };
@@ -178,9 +178,7 @@ namespace TraineeManagement.Api.Services
         private async Task ValidateSubmissionExistsAsync(int submissionId, CancellationToken cancellationToken)
         {
             Submission? submission = await _context.Submissions
-                .FirstOrDefaultAsync(
-                    s => s.Id == submissionId,
-                    cancellationToken);
+                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == submissionId, cancellationToken);
 
             if (submission is null)
             {

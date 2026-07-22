@@ -14,6 +14,7 @@ public class SubmissionProcessorService : ISubmissionProcessorService
     private readonly ILogger<SubmissionProcessorService> _logger;
 
     private const int MaxRetryAttempts = 3;
+    private const string RootDirectory = "../Upload";
 
     public SubmissionProcessorService(AppDbContext context, ILogger<SubmissionProcessorService> logger)
     {
@@ -25,50 +26,25 @@ public class SubmissionProcessorService : ISubmissionProcessorService
         _logger.LogInformation("Processing message: {MessageId}", message.MessageId);
         try
         {
-            ProcessingJob? processingJob =
-                await _context.ProcessingJobs
-                .FirstOrDefaultAsync(
-                p => p.MessageId == message.MessageId || p.SubmissionFileId == message.FileId,
-                cancellationToken);
+            ProcessingJob? processingJob = await FetchProcessingJobAsync(message, cancellationToken);
 
-            if (processingJob is null)
+            if (processingJob is null || processingJob.Status is ProcessingStatus.Completed)
             {
-                _logger.LogWarning("ProcessingJob not found.");
-
-                return ProcessingResultStatus.Success;
-            }
-            if (processingJob.Status == ProcessingStatus.Completed)
-            {
-                _logger.LogInformation("Duplicate message ignored.");
-
                 return ProcessingResultStatus.Success;
             }
 
-            processingJob.Status = ProcessingStatus.Processing;
-            processingJob.StartedAt = DateTime.UtcNow;
+            await UpdateJobToProcessingAsync(processingJob, cancellationToken);
+            _logger.LogInformation("Job {id} is Processing.", processingJob.Id);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            SubmissionFile? submissionFile = await FetchSubmissionFileOrThrowAsync(processingJob.SubmissionFileId, cancellationToken);
+            _logger.LogInformation("Submission file {id} found for Processing", processingJob.SubmissionFileId);
 
-            SubmissionFile? submissionFile = await _context.SubmissionFiles
-                .FirstOrDefaultAsync(
-                s => s.Id == processingJob.SubmissionFileId,
-                cancellationToken);
-
-            if (submissionFile is null)
-            {
-                throw new FileNotFoundException("Submission file not found.");
-            }
-            string filePath = Path.Combine("../Uploads", submissionFile.StorageFileName);
-
+            string filePath = Path.Combine(RootDirectory, submissionFile.StorageFileName);
             submissionFile.Checksum = await CalculateChecksumAsync(filePath, cancellationToken);
 
-
-            processingJob.Status = ProcessingStatus.Completed;
-            processingJob.CompletedAt = DateTime.UtcNow;
-            processingJob.ErrorSummary = null;
-            await _context.SaveChangesAsync(cancellationToken);
-
+            await CompleteJobAsync(processingJob, cancellationToken);
             _logger.LogInformation("Submission {submissionId} processed successfully.", message.SubmissionId);
+
             return ProcessingResultStatus.Success;
         }
         catch (Exception ex)
@@ -82,25 +58,21 @@ public class SubmissionProcessorService : ISubmissionProcessorService
         CancellationToken cancellationToken)
     {
         ProcessingJob? processingJob = await _context.ProcessingJobs
-            .FirstOrDefaultAsync(
-                p => p.MessageId == message.MessageId,
-                cancellationToken);
+            .FirstOrDefaultAsync(processingJob => processingJob.MessageId == message.MessageId, cancellationToken);
 
         if (processingJob is null)
+        {
             return ProcessingResultStatus.DeadLetter;
+        }
 
         processingJob.Attempts++;
-
         processingJob.ErrorSummary = exception.Message;
 
         if (processingJob.Attempts >= MaxRetryAttempts)
         {
             processingJob.Status = ProcessingStatus.Failed;
-
             processingJob.CompletedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync(cancellationToken);
-
             return ProcessingResultStatus.DeadLetter;
         }
 
@@ -126,5 +98,44 @@ public class SubmissionProcessorService : ISubmissionProcessorService
         byte[] hash = await SHA256.HashDataAsync(stream, cancellationToken);
 
         return Convert.ToHexString(hash);
+    }
+
+    private async Task<ProcessingJob?> FetchProcessingJobAsync(SubmissionProcessingRequested message, CancellationToken token)
+    {
+        ProcessingJob? job = await _context.ProcessingJobs.FirstOrDefaultAsync(
+            currentProcessingJob => currentProcessingJob.MessageId == message.MessageId ||
+            currentProcessingJob.SubmissionFileId == message.SubmissionFileId, token);
+
+        if (job is null)
+        {
+            _logger.LogWarning("ProcessingJob not found.");
+        }
+        else if (job.Status is ProcessingStatus.Completed)
+        {
+            _logger.LogInformation("Duplicate message ignored.");
+        }
+
+        return job;
+    }
+
+    private async Task UpdateJobToProcessingAsync(ProcessingJob job, CancellationToken token)
+    {
+        job.Status = ProcessingStatus.Processing;
+        job.StartedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(token);
+    }
+
+    private async Task<SubmissionFile> FetchSubmissionFileOrThrowAsync(int fileId, CancellationToken token)
+    {
+        SubmissionFile? file = await _context.SubmissionFiles.FirstOrDefaultAsync(currentSubmissionFile => currentSubmissionFile.Id == fileId, token);
+        return file ?? throw new FileNotFoundException("Submission file entry not found in the database.");
+    }
+
+    private async Task CompleteJobAsync(ProcessingJob job, CancellationToken token)
+    {
+        job.Status = ProcessingStatus.Completed;
+        job.CompletedAt = DateTime.UtcNow;
+        job.ErrorSummary = null;
+        await _context.SaveChangesAsync(token);
     }
 }

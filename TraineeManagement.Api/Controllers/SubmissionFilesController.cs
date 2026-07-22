@@ -26,7 +26,7 @@ namespace TraineeManagement.Api.Controllers
         public async Task<ActionResult<SubmissionAcceptedResponse>> Upload(int submissionId, [FromForm] UploadSubmissionFileRequest request,
             CancellationToken cancellationToken)
         {
-            int uploadedBy = 1; // Temporary
+            int uploadedBy = 1; // Temporary - Future scope: getting trainee id by using jwt token 
 
             SubmissionAcceptedResponse response = await _submissionFileService.UploadAsync(submissionId, request, uploadedBy, cancellationToken);
 

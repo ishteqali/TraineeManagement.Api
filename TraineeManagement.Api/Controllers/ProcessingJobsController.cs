@@ -23,6 +23,7 @@ namespace TraineeManagement.Api.Controllers
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
             ProcessingJobResponse job = await _processingJobService.GetByIdAsync(id, cancellationToken);
+            _logger.LogInformation("Processing Job found with Id: {id}", id);
             return Ok(job);
         }
     }

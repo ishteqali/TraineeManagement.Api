@@ -6,7 +6,7 @@ namespace TraineeManagement.Api.DTOs
 
         public int SubmissionId { get; set; }
 
-        public int FileId { get; set; }
+        public int SubmissionFileId { get; set; }
 
         public string Status { get; set; } = string.Empty;
 
