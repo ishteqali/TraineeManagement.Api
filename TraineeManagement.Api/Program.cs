@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Http.Features;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using TraineeManagement.Shared.Configurations;
+using TraineeManagement.Api.Configuration;
+using Microsoft.Extensions.Http.Resilience;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -23,12 +25,10 @@ DotEnv.Load();
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
-
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
-
 builder.Services.Configure<FileStorageOptions>(builder.Configuration.GetSection(FileStorageOptions.SectionName));
-
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection(RedisOptions.SectionName));
+builder.Services.Configure<TrainingDirectorySettings>(builder.Configuration.GetSection(TrainingDirectorySettings.SectionName));
 
 // Removing Upload file limit for kestral 
 builder.Services.Configure<FormOptions>(options =>
@@ -55,10 +55,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ReactFrontendPolicy", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:5119",
-            "http://127.0.0.1:5119")
+            "https://localhost:3000",
+            "https://localhost:5173",
+            "https://localhost:5119",
+            "https://127.0.0.1:5119")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -130,7 +130,7 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-RedisOptions redis =builder.Configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>()
+RedisOptions redis = builder.Configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>()
     ?? throw new InvalidOperationException("Redis configuration missing.");
 
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -138,6 +138,17 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = redis.ConnectionString;
     options.InstanceName = redis.InstanceName;
 });
+
+IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<ITrainingDirectoryClient, TrainingDirectoryClient>(client =>
+{
+    TrainingDirectorySettings trainingDirectorySettings = builder.Configuration.GetSection(TrainingDirectorySettings.SectionName).Get<TrainingDirectorySettings>()
+        ?? throw new InvalidOperationException("Training Directory configuration missing.");
+
+    client.BaseAddress = new Uri(trainingDirectorySettings!.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+httpClientBuilder.AddStandardResilienceHandler();
 
 builder.Services.AddScoped<ITraineeService, TraineeService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

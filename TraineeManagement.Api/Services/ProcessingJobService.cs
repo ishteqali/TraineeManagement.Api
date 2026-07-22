@@ -21,7 +21,7 @@ namespace TraineeManagement.Api.Services
             ProcessingJob? job = await _context.ProcessingJobs
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                    p => p.Id == id,
+                    processingJob => processingJob.Id == id,
                     cancellationToken);
 
             if (job is null)

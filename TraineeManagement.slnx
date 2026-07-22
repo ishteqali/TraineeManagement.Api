@@ -2,4 +2,5 @@
   <Project Path="TraineeManagement.Api/TraineeManagement.Api.csproj" />
   <Project Path="TraineeManagement.Shared/TraineeManagement.Shared.csproj" />
   <Project Path="TraineeManagement.Worker/TraineeManagement.Worker.csproj" />
+  <Project Path="TrainingDirectory.Api/TrainingDirectory.Api.csproj" />
 </Solution>

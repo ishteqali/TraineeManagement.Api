@@ -53,6 +53,9 @@ namespace TraineeManagement.Api.Constants
             return $"Invalid value '{value}' for field '{fieldName}'. Valid options are: {validValues}";
         }
 
+        // Training Directory 
+        public const string TrainingDirectoryNotAvailable = "Training Directory service is unavailable.";
+
 
         // File Validation
         public const string EmptyFile = "The uploaded file cannot be empty.";
