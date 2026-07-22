@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using TraineeManagement.Shared.Configurations;
 using TraineeManagement.Api.Configuration;
 using Microsoft.Extensions.Http.Resilience;
+using System.Net.Mime;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -146,7 +147,7 @@ IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<ITraining
 
     client.BaseAddress = new Uri(trainingDirectorySettings!.BaseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
 });
 httpClientBuilder.AddStandardResilienceHandler();
 

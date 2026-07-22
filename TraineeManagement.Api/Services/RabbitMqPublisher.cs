@@ -5,6 +5,8 @@ using RabbitMQ.Client;
 using TraineeManagement.Shared.Configurations;
 using TraineeManagement.Shared.Contracts;
 using TraineeManagement.Api.Interfaces;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Net.Mime;
 
 namespace TraineeManagement.Api.Services
 {
@@ -56,7 +58,7 @@ namespace TraineeManagement.Api.Services
                     Persistent = true,
                     MessageId = message.MessageId.ToString(),
                     CorrelationId = message.CorrelationId.ToString(),
-                    ContentType = "application/json",
+                    ContentType = MediaTypeNames.Application.Json,
                     Type = nameof(SubmissionProcessingRequested)
                 };
 

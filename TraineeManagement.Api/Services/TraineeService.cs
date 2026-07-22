@@ -96,42 +96,12 @@ namespace TraineeManagement.Api.Services
         public async Task<TraineeResponse?> GetTraineeByIdAsync(int id)
         {
             string cacheKey = CacheKeys.Trainee(id);
-            try
+            Func<Task<TraineeResponse?>> retrieveFromDb = async () =>
             {
-                string? cachedData = await _cache.GetStringAsync(cacheKey);
-
-                if (!string.IsNullOrEmpty(cachedData))
-                {
-                    return JsonSerializer.Deserialize<TraineeResponse>(cachedData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Redis cache unavailable. Falling back to MySQL.");
-            }
-
-            Trainee? trainee = await _context.Trainees.FindAsync(id);
-            if (trainee is null) return null;
-            TraineeResponse response = MapToResponse(trainee);
-            DistributedCacheEntryOptions cacheOptions = new()
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                Trainee? trainee = await _context.Trainees.FindAsync(id);
+                return trainee is null ? null : MapToResponse(trainee);
             };
-
-            string? serializedResponse = JsonSerializer.Serialize(response);
-
-            try
-            {
-                await _cache.SetStringAsync(
-                    cacheKey,
-                    serializedResponse,
-                    cacheOptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Unable to write data to Redis cache.");
-            }
-            return response;
+            return await _cache.GetOrSetAsync(cacheKey, retrieveFromDb, _logger);
         }
 
         public async Task<TraineeResponse> AddTraineeAsync(CreateTraineeRequest request)
@@ -167,14 +137,10 @@ namespace TraineeManagement.Api.Services
 
             await _context.SaveChangesAsync();
             _logger.LogInformation($"Trainee with ID: {trainee.Id} was successfully updated at Timestamp: {trainee.UpdatedDate} UTC");
-            try
-            {
-                await _cache.RemoveAsync(CacheKeys.Trainee(id));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Unable to invalidate Redis cache for trainee {Id}.", id);
-            }
+
+            string cacheKey = CacheKeys.Trainee(id);
+            await _cache.RemoveCacheAsync(cacheKey, _logger);
+
             return MapToResponse(trainee);
         }
 
@@ -186,14 +152,10 @@ namespace TraineeManagement.Api.Services
             _context.Trainees.Remove(trainee);
             await _context.SaveChangesAsync();
             _logger.LogInformation($"Trianee with ID: {trainee.Id} was successfully deleted at Timestamp: {DateTime.UtcNow} UTC");
-            try
-            {
-                await _cache.RemoveAsync(CacheKeys.Trainee(id));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Unable to invalidate Redis cache for trainee {Id}.", id);
-            }
+
+            string cacheKey = CacheKeys.Trainee(id);
+            await _cache.RemoveCacheAsync(cacheKey, _logger);
+
             return true;
         }
     }

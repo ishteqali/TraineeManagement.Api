@@ -8,6 +8,8 @@ using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Exceptions;
 using TraineeManagement.Api.Exceptions.Base;
 using TraineeManagement.Api.DTOs;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Net.Mime;
 
 namespace TraineeManagement.Api.Middleware
 {
@@ -50,7 +52,7 @@ namespace TraineeManagement.Api.Middleware
 
         private static Task HandleExceptionAsync(HttpContext context, int statusCode, string message)
         {
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = MediaTypeNames.Application.Json;
             context.Response.StatusCode = statusCode;
 
             string? result = JsonSerializer.Serialize(new ErrorResponse

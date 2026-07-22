@@ -80,46 +80,16 @@ namespace TraineeManagement.Api.Services
         public async Task<SubmissionResponse?> GetSubmissionByIdAsync(int id)
         {
             string cacheKey = CacheKeys.Submission(id);
-            try
+            Func<Task<SubmissionResponse?>> retrieveFromDb = async () =>
             {
-                string? cachedData = await _cache.GetStringAsync(cacheKey);
-
-                if (!string.IsNullOrEmpty(cachedData))
-                {
-                    return JsonSerializer.Deserialize<SubmissionResponse>(cachedData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Redis cache unavailable. Falling back to MySQL.");
-            }
-
-            Submission? submission = await _context.Submissions
-                .Include(selectSubmission => selectSubmission.TaskAssignment)
-                .ThenInclude(selectTaskAssignment => selectTaskAssignment.LearningTask)
-                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == id);
-            if (submission is null)
-            {
-                return null;
-            }
-            SubmissionResponse response = MapToResponse(submission);
-
-            DistributedCacheEntryOptions cacheOptions = new()
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                Submission? submission = await _context.Submissions
+                    .Include(currentSubmission => currentSubmission.TaskAssignment)
+                    .ThenInclude(ta => ta.LearningTask)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+                return submission is null ? null : MapToResponse(submission);
             };
-
-            string? serializedResponse = JsonSerializer.Serialize(response);
-
-            try
-            {
-                await _cache.SetStringAsync(cacheKey, serializedResponse, cacheOptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Unable to write data to Redis cache.");
-            }
-            return MapToResponse(submission);
+            return await _cache.GetOrSetAsync(cacheKey, retrieveFromDb, _logger
+            );
         }
     }
 }

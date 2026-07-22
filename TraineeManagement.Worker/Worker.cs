@@ -88,9 +88,9 @@ namespace TraineeManagement.Worker
             _logger.LogInformation("RabbitMQ connected successfully.");
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await InitializeRabbitMqAsync(stoppingToken);
+            await InitializeRabbitMqAsync(cancellationToken);
             _logger.LogInformation("RabbitMQ Started");
 
             AsyncEventingBasicConsumer consumer = new(_channel!);
@@ -112,14 +112,14 @@ namespace TraineeManagement.Worker
                         await _channel!.BasicRejectAsync(
                             eventArgs.DeliveryTag,
                             requeue: false,
-                            cancellationToken: stoppingToken);
+                            cancellationToken: cancellationToken);
 
                         return;
                     }
 
                     using IServiceScope scope = _scopeFactory.CreateScope();
                     ISubmissionProcessorService processor = scope.ServiceProvider.GetRequiredService<ISubmissionProcessorService>();
-                    ProcessingResultStatus result = await processor.ProcessAsync(message, stoppingToken);
+                    ProcessingResultStatus result = await processor.ProcessAsync(message, cancellationToken);
 
                     switch (result)
                     {
@@ -128,7 +128,7 @@ namespace TraineeManagement.Worker
                             await _channel!.BasicAckAsync(
                                 eventArgs.DeliveryTag,
                                 false,
-                                stoppingToken);
+                                cancellationToken);
 
                             break;
 
@@ -138,7 +138,7 @@ namespace TraineeManagement.Worker
                                 eventArgs.DeliveryTag,
                                 false,
                                 true,
-                                stoppingToken);
+                                cancellationToken);
 
                             break;
 
@@ -147,7 +147,7 @@ namespace TraineeManagement.Worker
                             await _channel!.BasicRejectAsync(
                                 eventArgs.DeliveryTag,
                                 false,
-                                stoppingToken);
+                                cancellationToken);
 
                             break;
                     }
@@ -160,7 +160,7 @@ namespace TraineeManagement.Worker
                         eventArgs.DeliveryTag,
                         false,
                         true,
-                        stoppingToken);
+                        cancellationToken);
                 }
             };
 
@@ -168,11 +168,11 @@ namespace TraineeManagement.Worker
                 queue: _options.QueueName,
                 autoAck: false,
                 consumer: consumer,
-                cancellationToken: stoppingToken);
+                cancellationToken: cancellationToken);
 
             _logger.LogInformation("RabbitMQ consumer started.");
 
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+            await Task.Delay(Timeout.Infinite, cancellationToken);
         }
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
