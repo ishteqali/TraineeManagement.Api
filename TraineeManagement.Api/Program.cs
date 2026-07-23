@@ -18,6 +18,9 @@ using TraineeManagement.Shared.Configurations;
 using TraineeManagement.Api.Configuration;
 using Microsoft.Extensions.Http.Resilience;
 using System.Net.Mime;
+using RabbitMQ.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -46,9 +49,9 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 // Configuring the database connection string and adding the DbContext
 DatabaseOptions databaseOptions = builder.Configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
     ?? throw new InvalidOperationException("Database configuration is missing.");
-string connectionString = $"Server={databaseOptions.Host};Port={databaseOptions.Port};Database={databaseOptions.Database};User={databaseOptions.User};Password={databaseOptions.Password};";
+string connectionStringMySql = $"Server={databaseOptions.Host};Port={databaseOptions.Port};Database={databaseOptions.Database};User={databaseOptions.User};Password={databaseOptions.Password};";
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseMySQL(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseMySQL(connectionStringMySql));
 
 // Configuring CORS for ReactFrontend (Phase 3)
 builder.Services.AddCors(options =>
@@ -69,18 +72,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-}).ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var secureErrorPayload = new
-            {
-                message = "The request payload format is invalid or malformed."
-            };
-
-            return new BadRequestObjectResult(secureErrorPayload);
-        };
-    }); ;
+});
 
 // Configuring JWT authentication
 JwtSettings jwt = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
@@ -140,16 +132,39 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = redis.InstanceName;
 });
 
+TrainingDirectorySettings trainingDirectorySettings = builder.Configuration.GetSection(TrainingDirectorySettings.SectionName).Get<TrainingDirectorySettings>()
+    ?? throw new InvalidOperationException("Training Directory configuration missing.");
+
 IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<ITrainingDirectoryClient, TrainingDirectoryClient>(client =>
 {
-    TrainingDirectorySettings trainingDirectorySettings = builder.Configuration.GetSection(TrainingDirectorySettings.SectionName).Get<TrainingDirectorySettings>()
-        ?? throw new InvalidOperationException("Training Directory configuration missing.");
-
     client.BaseAddress = new Uri(trainingDirectorySettings!.BaseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
     client.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
 });
 httpClientBuilder.AddStandardResilienceHandler();
+
+//RabbitMq connection String
+RabbitMqOptions rabbitMqOptions = builder.Configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
+    ?? throw new InvalidOperationException("RabbitMq configuration missing");
+
+// Configuring Health Check
+string[] tags = ["ready"];
+builder.Services.AddHealthChecks()
+    .AddMySql(connectionStringMySql, name: "mysql", tags: tags)
+    .AddRedis(redis.ConnectionString, name: "redis", tags: tags)
+    .AddRabbitMQ(factory: serviceProvider =>
+        {
+            ConnectionFactory? factory = new ConnectionFactory
+            {
+                HostName = rabbitMqOptions.Host,
+                Port = rabbitMqOptions.Port,
+                UserName = rabbitMqOptions.Username,
+                Password = rabbitMqOptions.Password,
+                VirtualHost = rabbitMqOptions.VirtualHost
+            };
+            return factory.CreateConnectionAsync();
+        }, name: "rabbitmq", tags: tags)
+    .AddUrlGroup(new Uri(trainingDirectorySettings.BaseUrl), name: "training-directory", tags: tags);
 
 builder.Services.AddScoped<ITraineeService, TraineeService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -165,6 +180,19 @@ builder.Services.AddScoped<IProcessingJobService, ProcessingJobService>();
 
 
 WebApplication? app = builder.Build();
+
+//Help check 
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+}).WithTags("Health Check");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains(tags[0]),
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
 
 if (app.Environment.IsDevelopment())
 {

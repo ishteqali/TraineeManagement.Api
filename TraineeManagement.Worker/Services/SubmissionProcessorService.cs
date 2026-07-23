@@ -14,7 +14,7 @@ public class SubmissionProcessorService : ISubmissionProcessorService
     private readonly ILogger<SubmissionProcessorService> _logger;
 
     private const int MaxRetryAttempts = 3;
-    private const string RootDirectory = "../Upload";
+    private const string RootDirectory = "/App/uploads";
 
     public SubmissionProcessorService(AppDbContext context, ILogger<SubmissionProcessorService> logger)
     {
