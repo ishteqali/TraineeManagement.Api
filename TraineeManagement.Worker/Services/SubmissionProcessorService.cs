@@ -5,6 +5,7 @@ using TraineeManagement.Shared.Enums;
 using TraineeManagement.Shared.Models;
 using TraineeManagement.Worker.Interfaces;
 using System.Security.Cryptography;
+using TraineeManagement.Api.Helpers;
 
 namespace TraineeManagement.Worker.Services;
 
@@ -39,9 +40,16 @@ public class SubmissionProcessorService : ISubmissionProcessorService
             SubmissionFile? submissionFile = await FetchSubmissionFileOrThrowAsync(processingJob.SubmissionFileId, cancellationToken);
             _logger.LogInformation("Submission file {id} found for Processing", processingJob.SubmissionFileId);
 
+            //Processing file: Validating Checksum
             string filePath = Path.Combine(RootDirectory, submissionFile.StorageFileName);
-            submissionFile.Checksum = await CalculateChecksumAsync(filePath, cancellationToken);
-
+            string calculatedChecksum = await FileHelper.CalculateChecksumAsync(filePath, cancellationToken);
+            if (!string.Equals(submissionFile.Checksum, calculatedChecksum))
+            {
+                _logger.LogWarning("Checksum Validation Failed for submission file {submissionFileId}", submissionFile.Id);
+                await ValidationFailedAsync(processingJob, cancellationToken);
+                return ProcessingResultStatus.DeadLetter;
+            }
+            _logger.LogInformation("Checksum Validated Successfully for submission file {submissionFileId}", submissionFile.Id);
             await CompleteJobAsync(processingJob, cancellationToken);
             _logger.LogInformation("Submission {submissionId} processed successfully.", message.SubmissionId);
 
@@ -81,25 +89,6 @@ public class SubmissionProcessorService : ISubmissionProcessorService
         return ProcessingResultStatus.Retry;
     }
 
-    private async Task<string> CalculateChecksumAsync(string filePath, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
-        }
-
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("File not found: {filePath}", filePath);
-        }
-
-        await using FileStream stream = File.OpenRead(filePath);
-
-        byte[] hash = await SHA256.HashDataAsync(stream, cancellationToken);
-
-        return Convert.ToHexString(hash);
-    }
-
     private async Task<ProcessingJob?> FetchProcessingJobAsync(SubmissionProcessingRequested message, CancellationToken token)
     {
         ProcessingJob? job = await _context.ProcessingJobs.FirstOrDefaultAsync(
@@ -136,6 +125,13 @@ public class SubmissionProcessorService : ISubmissionProcessorService
         job.Status = ProcessingStatus.Completed;
         job.CompletedAt = DateTime.UtcNow;
         job.ErrorSummary = null;
+        await _context.SaveChangesAsync(token);
+    }
+    private async Task ValidationFailedAsync(ProcessingJob job, CancellationToken token)
+    {
+        job.Status = ProcessingStatus.Failed;
+        job.CompletedAt = DateTime.UtcNow;
+        job.ErrorSummary = "Checksum Validation Failed";
         await _context.SaveChangesAsync(token);
     }
 }

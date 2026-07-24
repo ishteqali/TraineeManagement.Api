@@ -22,13 +22,7 @@ namespace TraineeManagement.Api.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     processingJob => processingJob.Id == id,
-                    cancellationToken);
-
-            if (job is null)
-            {
-                throw new NotFoundException(ExceptionMessages.JobProcessingNotFound(id));
-            }
-
+                    cancellationToken) ?? throw new NotFoundException(ExceptionMessages.JobProcessingNotFound(id));
             return new ProcessingJobResponse
             {
                 Id = job.Id,

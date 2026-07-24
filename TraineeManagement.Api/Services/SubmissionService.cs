@@ -45,9 +45,7 @@ namespace TraineeManagement.Api.Services
         {
             TaskAssignment? taskAssignment = await _context.TaskAssignments
                                     .Include(taskAssignment => taskAssignment.LearningTask)
-                                    .FirstOrDefaultAsync(taskAssignment => taskAssignment.Id == request.TaskAssignmentId);
-            if (taskAssignment is null) throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
-
+                                    .FirstOrDefaultAsync(taskAssignment => taskAssignment.Id == request.TaskAssignmentId) ?? throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
             Submission submission = new Submission
             {
                 TaskAssignmentId = request.TaskAssignmentId,

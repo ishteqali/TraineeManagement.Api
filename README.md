@@ -1,59 +1,474 @@
 # Trainee Management API
 
-The Trainee Management API is a backend web service that creates, updates, deletes,and manages trainee profiles for an organization. All Trainee Data is stored in InMemoryDatabase. It is also contain search query parameter in GET request for searching all Trainee records that matches that query. It provides input validaton for all request and shows only required data in response.
+The **Trainee Management System** is a backend application built using **ASP.NET Core Web API** for managing trainees, mentors, learning tasks, task assignments, submissions, reviews, and asynchronous file processing.
+
+The application uses **MySQL** as the primary database, **Redis** for distributed caching, **RabbitMQ** for asynchronous message processing, and **Docker Compose** to run the complete backend stack locally.
 
 ## Technology Used
 * ASP.NET Core Web API
 * C#
+* MySql
+* Redis
+* RabbitMq
+* Docker
 * Swagger
 
-## How to Run
+## Project Structure
 
-Follow these step to build and run this .NET project (Trainee Management API)
+```text
+TraineeManagement
+│
+├── TraineeManagement.Api
+│   ├── Configurations
+│   ├── Constants
+│   ├── Controllers
+│   ├── DTOs
+│   ├── Exceptions
+│   ├── Helpers
+│   ├── Interfaces
+│   ├── Middleware
+│   └── Services
+│
+├── TraineeManagement.Shared
+│   ├── Models
+│   ├── Enums
+│   ├── Contracts
+│   ├── Data
+│   ├── Configurations
+│   └── Helpers
+│
+├── TraineeManagement.Worker
+│   ├── Interfaces
+│   └── Services
+│
+├── TrainingDirectory.Api
+│   ├── Models
+│   └── Controllers
+│
+├── docker-compose.yml
+├── .env
+└── README.md
+```
 
-### 1. Prerequisite Check
-Install .NET sdk for windows or Ubuntu from official sources
+## Clone Repository
 
-### 2. Clone and Open this project directory
+Clone the repository using Git.
 
-### 3. Restore dependencies
+```bash
+git clone https://github.com/ishteqali/TraineeManagement.Api.git
+
+```
+
+---
+
+## Restore Dependencies
+
+Restore all NuGet packages.
+
 ```bash
 dotnet restore
 ```
 
-### 4. Build and Run the .NET project
+---
+
+## Build the Solution
+
 ```bash
 dotnet build
-dotnet run
 ```
-Open browser and go to the url: `http://localhost:5119/swagger/index.html` where application is running 
 
-## Database Setup (MySQL)
-This project uses MySQL database for data storage
+The project should build successfully without any errors.
 
-### 1. Run MySQL server on default port 3306
+---
 
-### 2. Create database for this application and named it `trainee_management_db`
+## Project Configuration
 
-### 3. Create `.env` file and add the values like MySQL username, password, etc. in below format
-```bash
+The application uses environment variables for sensitive configuration such as database credentials, Redis, RabbitMQ, JWT settings and Docker configuration.
+
+Create a file named
+
+```text
+.env
+```
+
+inside the project root.
+
+Example:
+
+```properties
+# -----------------------------
+# Database
+# -----------------------------
 DbSettings__Host=localhost
 DbSettings__Port=3306
 DbSettings__Database=trainee_management_db
-DbSettings__User=username
-DbSettings__Password=password
+DbSettings__User=root
+DbSettings__Password=your_password
+
+# -----------------------------
+# JWT
+# -----------------------------
+Jwt__Issuer=TraineeManagementApi
+Jwt__Audience=TraineeManagementClient
+Jwt__ExpiryMinutes=60
+Jwt__Key=YourSuperSecretKey
+
+# -----------------------------
+# Redis
+# -----------------------------
+Redis__ConnectionString=localhost:6379
+Redis__InstanceName=TraineeManagement:
+
+# -----------------------------
+# RabbitMQ
+# -----------------------------
+RabbitMq__Host=localhost
+RabbitMq__Port=5672
+RabbitMq__Username=guest
+RabbitMq__Password=guest
+RabbitMq__VirtualHost=/
+
+# -----------------------------
+# Training Directory API
+# -----------------------------
+TrainingDirectory__BaseUrl=http://localhost:5002
 ```
 
-### 4. Add neccessary dotnet packages
+> **Note**
+>
+> When running with **Docker Compose**, the service names replace `localhost`.
+>
+> Example:
+>
+> ```properties
+> DbSettings__Host=mysql
+> Redis__ConnectionString=redis:6379
+> RabbitMq__Host=rabbitmq
+> TrainingDirectory__BaseUrl=http://trainingdirectory-api:8080
+> ```
+
+---
+
+## Running the Application without Docker
+
+Apply EF Core migrations.
+
 ```bash
-dotnet add package MySql.EntityFrameworkCore
+dotnet ef database update -p Shared -s TraineeManagement.Api
 ```
 
-### 5. Run this command on project root for creating database schema (EF Core migration commands)
+Run the API.
+
 ```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
+dotnet run --project TraineeManagement.Api
 ```
+
+The application will start and Swagger UI will be available at:
+
+```
+http://localhost:5119/swagger
+```
+
+## Running the Application using Docker Compose
+
+The project supports Docker Compose for running the complete backend environment. All required services are started together, allowing the application to run without installing MySQL, Redis or RabbitMQ locally.
+
+### Services
+
+Docker Compose starts the following containers:
+
+| Service | Description |
+|----------|-------------|
+| TraineeManagement.Api | Main ASP.NET Core Web API |
+| TraineeManagement.Worker | Background Worker Service |
+| TrainingDirectory.Api | Internal service for inter-service communication |
+| MySQL | Primary relational database |
+| Redis | Distributed cache |
+| RabbitMQ | Message broker for asynchronous processing |
+
+
+### Build Docker Images
+
+Run the following command from the project root.
+
+```bash
+docker compose build
+```
+
+---
+
+### Start All Services
+
+```bash
+docker compose up -d
+```
+
+This command starts all required containers in the background.
+
+---
+
+### Stop All Services
+
+```bash
+docker compose down
+```
+
+---
+
+### Rebuild after Code Changes
+
+Whenever application code is modified, rebuild the images before starting the containers.
+
+```bash
+docker compose up --build -d
+```
+
+---
+
+### View Running Containers
+
+```bash
+docker ps
+```
+
+---
+
+### View Container Logs
+
+#### API
+
+```bash
+docker compose logs traineemanagement-api
+```
+
+#### Worker
+
+```bash
+docker compose logs traineemanagement-worker
+```
+
+#### Training Directory API
+
+```bash
+docker compose logs trainingdirectory-api
+```
+
+#### RabbitMQ
+
+```bash
+docker compose logs rabbitmq
+```
+
+#### MySQL
+
+```bash
+docker compose logs mysql
+```
+
+#### Redis
+
+```bash
+docker compose logs redis
+```
+
+---
+
+### Docker Container Ports
+
+| Service | Container Port | Host Port |
+|----------|---------------|-----------|
+| TraineeManagement.Api | 8080 | 5001 |
+| TrainingDirectory.Api | 8080 | 5002 |
+| MySQL | 3306 | 3306 |
+| Redis | 6379 | 6379 |
+| RabbitMQ | 5672 | 5672 |
+| RabbitMQ Management | 15672 | 15672 |
+
+---
+
+### Access URLs
+
+| Service | URL |
+|----------|-----|
+| Swagger UI | http://localhost:5001/swagger |
+| Training Directory API | http://localhost:5002/swagger |
+| RabbitMQ Management | http://localhost:15672 |
+
+---
+
+### Docker Volumes
+
+The project uses Docker volumes for persistent storage.
+
+- MySQL Database
+- Redis Data
+- RabbitMQ Data
+- Uploaded Files
+
+Data remains available even after restarting the containers.
+
+---
+
+### Health Check Endpoints
+
+Application health can be verified using the following endpoints.
+
+#### Liveness
+
+```
+GET /health/live
+```
+
+#### Readiness
+
+```
+GET /health/ready
+```
+
+The readiness endpoint verifies connectivity with:
+
+- MySQL
+- Redis
+- RabbitMQ
+- TrainingDirectory.Api
+
+---
+
+### Notes
+
+- Containers communicate using Docker service names instead of `localhost`.
+- MySQL host inside Docker is `mysql`.
+- Redis host inside Docker is `redis`.
+- RabbitMQ host inside Docker is `rabbitmq`.
+- Training Directory API host inside Docker is `trainingdirectory-api`.
+
+## Database Setup
+
+The application uses **MySQL** as the primary relational database and **Entity Framework Core** for database access.
+
+The database schema is created using EF Core migrations.
+
+---
+
+### Create Database
+
+Create a MySQL database.
+
+```sql
+CREATE DATABASE trainee_management_db;
+```
+
+---
+
+### Configure Database
+
+Update your database configuration inside the `.env` file.
+
+```properties
+DbSettings__Host=localhost
+DbSettings__Port=3306
+DbSettings__Database=trainee_management_db
+DbSettings__User=root
+DbSettings__Password=your_password
+```
+
+When running with Docker Compose:
+
+```properties
+DbSettings__Host=mysql
+DbSettings__Port=3306
+DbSettings__Database=trainee_management_db
+DbSettings__User=root
+DbSettings__Password=your_password
+```
+
+---
+
+### Apply Database Migrations
+
+Run the following command to create all tables.
+
+```bash
+dotnet ef database update \
+  --project TraineeManagement.Shared \
+  --startup-project TraineeManagement.Api
+```
+
+---
+
+### Create a New Migration
+
+After making changes to your entity models, create a new migration.
+
+```bash
+dotnet ef migrations add MigrationName \
+  --project TraineeManagement.Shared \
+  --startup-project TraineeManagement.Api
+```
+
+Example:
+
+```bash
+dotnet ef migrations add AddSubmissionProcessing
+```
+
+---
+
+### Update Database After New Migration
+
+```bash
+dotnet ef database update \
+  --project TraineeManagement.Shared \
+  --startup-project TraineeManagement.Api
+```
+
+---
+
+### Remove the Last Migration
+
+If the migration has not been applied to the database:
+
+```bash
+dotnet ef migrations remove \
+  --project TraineeManagement.Shared \
+  --startup-project TraineeManagement.Api
+```
+
+---
+
+### List Available Migrations
+
+```bash
+dotnet ef migrations list \
+  --project TraineeManagement.Shared \
+  --startup-project TraineeManagement.Api
+```
+
+---
+
+### Verify Database
+
+After applying migrations, the database should contain tables similar to:
+
+- Trainees
+- Mentors
+- LearningTasks
+- TaskAssignments
+- Submissions
+- SubmissionFiles
+- Reviews
+- SubmissionProcessingJobs
+- Roles
+- Users
+
+---
+
+### Notes
+
+- Always apply migrations before running the application.
+- Do not edit migration files manually unless necessary.
+- Keep the migration history under source control.
+- Use the Docker service name (`mysql`) instead of `localhost` when the application runs inside Docker containers.
 
 ## Login Credentials for testing
 ```bash
@@ -73,6 +488,8 @@ dotnet ef database update
 
 ### Health
 * GET - /api/health - getting system running status
+* GET - /health/live - liveness check
+* GET - /health/ready - Readiness check
 
 ### Auth
 * POST - /api/auth/login - user login endpoint
@@ -112,7 +529,35 @@ dotnet ef database update
 ### Review
 * POST - /api/reviews - add new review
 * GET - /api/reviews - get all review 
-* GET - /api/reviews/{id} - get specific review by id
+* GET - /api/reviews/{id} - get specific review by id   
+
+### Submission Files
+* POST - /api/submissions/{submissionId}/files - add submission file for provided submission id
+* GET - /api/submission-files/{id} - get submission file meta data for specific submission file by id
+* DELETE - /api/submission-files/{id} - delete specific submission file by id
+* GET - /api/submission-files/download/{id} - download submission file by id  
+
+### Processing Jobs
+* GET - /api/processing-jobs/{id} - get processing job information
+
+---
+
+## Response Status Codes
+
+| Status Code | Meaning |
+|--------------|---------|
+| 200 | Request completed successfully |
+| 201 | Resource created successfully |
+| 202 | Request accepted for background processing |
+| 204 | Request completed with no content |
+| 400 | Invalid request |
+| 401 | Authentication required |
+| 403 | Permission denied |
+| 404 | Resource not found |
+| 409 | Conflict |
+| 500 | Internal server error |
+
+---
 
 ## Sample Request JSON
 
@@ -205,9 +650,115 @@ for GET (/api/trainees/{id})
     -Added cache invalidation for updated and deleted data
     -Added Logging of cache failure 
 
-## Known Limitations
+#### Day 3 (17th July, 2026)
+    -Added and configured Rabbitmq
+    -Created a Versioned Contract for producer and consumer 
+    -Message is published by producer 
+    -Created a basic worker project (TraineeManagement.Api)
 
-* No Authentication (fixed)
+#### Day 4 (20th July, 2026)
+    -Implemented SubmissionProcess in worker project
+    -Simulating processing using checksum validation
+    -Added job tracking api for tracking jobs (GET /api/processing-jobs/{id})
+    -Created Consumer idempotent and added retry and failed message handling (adding dead letter queue)
+
+#### Day 5 (21th July, 2026)
+    -Created new project for simulating inter-service communication (TrainingDirectory.Api)
+    -Created an api in this new project for testing (GET /api/trainees/{id})
+    -Added resilience controls for timeout and added fall back when service is unavailable
+    -Added this api in main application for testing this (GET /api/training-directory/trainees/{id})
+
+#### Day 6 (22th July, 2026)
+    -Added structured logging for every service
+    -Added health checks apis (GET /health/live and GET /health/ready)
+    -Putting everything in docker and using docker compose to run whole as a one 
+    -Tested every services running after using docker compose
+
+#### Day 7 (23th July, 2026)
+    -Testing whole appication every services
+    -Completed documentation
+    -Created Architecture diagram
+
+
+## Security Features
+
+The application follows secure coding practices to protect user data and uploaded files.
+
+Implemented:
+
+### Authentication & Authorization
+
+- JWT Authentication
+- Role-Based Authorization
+- Protected API Endpoints
+- Secure Token Validation
+
+---
+
+### Input Validation
+
+- Model Validation using Data Annotations
+- Request Validation
+- Custom Validation Messages
+- Global Exception Handling
+
+---
+
+### File Security
+
+- Allowed File Extension Validation
+- Maximum File Size Validation
+- SHA-256 Checksum Generation
+- SHA-256 Checksum Validation
+- Secure Local File Storage
+- Duplicate File Detection
+
+---
+
+### API Security
+
+- Standard HTTP Status Codes
+- Proper Error Responses
+- Centralized Exception Handling Middleware
+- Structured Logging using Serilog
+
+---
+
+### Messaging Security
+
+- Durable RabbitMQ Queues
+- Persistent Messages
+- Correlation ID for Request Tracking
+- Idempotent Message Processing
+
+---
+
+### Distributed Cache
+
+- Cache-Aside Pattern
+- Cache Invalidation
+- Configurable Cache Expiration
+- No Sensitive Data Cached
+
+---
+
+### Docker Security
+
+- Environment Variables for Configuration
+- Isolated Containers
+- Persistent Volumes
+- Service-to-Service Communication using Docker Network
+
+---
+
+### Health Monitoring
+
+- MySQL Health Check
+- Redis Health Check
+- RabbitMQ Health Check
+- TrainingDirectory API Health Check
+- Liveness Endpoint
+- Readiness Endpoint
 
 ## Improvements Planned
 

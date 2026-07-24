@@ -42,12 +42,9 @@ namespace TraineeManagement.Api.Services
         }
         public async Task<ReviewResponse> CreateReviewAsync(CreateReviewRequest request)
         {
-            Submission? submission = await _context.Submissions.FindAsync(request.SubmissionId);
-            if (submission is null) throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
+            Submission? submission = await _context.Submissions.FindAsync(request.SubmissionId) ?? throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
 
-            Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor is null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
-
+            Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId) ?? throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
             Review review = new Review
             {
                 SubmissionId = request.SubmissionId,

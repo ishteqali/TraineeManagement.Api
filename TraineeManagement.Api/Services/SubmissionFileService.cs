@@ -10,6 +10,7 @@ using TraineeManagement.Api.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using TraineeManagement.Shared.Contracts;
 using TraineeManagement.Shared.Enums;
+using TraineeManagement.Api.Helpers;
 
 namespace TraineeManagement.Api.Services
 {
@@ -17,7 +18,7 @@ namespace TraineeManagement.Api.Services
     {
         private readonly AppDbContext _context;
         private readonly IFileStorageService _fileStorageService;
-        private readonly FileStorageOptions _options;
+        private readonly FileStorageOptions _fileStorageOptions;
         private readonly ILogger<SubmissionFileService> _logger;
         private readonly IMessagePublisher _messagePublisher;
 
@@ -27,7 +28,7 @@ namespace TraineeManagement.Api.Services
             _context = context;
             _fileStorageService = fileStorageService;
             _logger = logger;
-            _options = options.Value;
+            _fileStorageOptions = options.Value;
             _messagePublisher = messagePublisher;
         }
 
@@ -37,12 +38,7 @@ namespace TraineeManagement.Api.Services
         {
             SubmissionFile? submissionFile = await _context.SubmissionFiles
                 .AsNoTracking()
-                .FirstOrDefaultAsync(subFile => subFile.Id == id, cancellationToken);
-
-            if (submissionFile is null)
-            {
-                throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
-            }
+                .FirstOrDefaultAsync(subFile => subFile.Id == id, cancellationToken) ?? throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             _logger.LogInformation("Retrieved submission file with Id: {id}.", id);
 
             return MapToResponse(submissionFile);
@@ -64,7 +60,7 @@ namespace TraineeManagement.Api.Services
             SubmissionFile submissionFile;
             try
             {
-                submissionFile = CreateSubmissionFile(submissionId, request, storageFileName, uploadedBy);
+                submissionFile = await CreateSubmissionFileAsync(submissionId, request, storageFileName, uploadedBy);
 
                 _context.SubmissionFiles.Add(submissionFile);
                 await _context.SaveChangesAsync(cancellationToken);
@@ -126,13 +122,7 @@ namespace TraineeManagement.Api.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     subFile => subFile.Id == id,
-                    cancellationToken);
-
-            if (submissionFile is null)
-            {
-                throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
-            }
-
+                    cancellationToken) ?? throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             Stream? stream = await _fileStorageService.OpenReadAsync(submissionFile.StorageFileName, cancellationToken);
 
             return new DownloadSubmissionFileResponse
@@ -147,13 +137,7 @@ namespace TraineeManagement.Api.Services
             SubmissionFile? submissionFile = await _context.SubmissionFiles
                 .FirstOrDefaultAsync(
                     subFile => subFile.Id == id,
-                    cancellationToken);
-
-            if (submissionFile is null)
-            {
-                throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
-            }
-
+                    cancellationToken) ?? throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             await _fileStorageService.DeleteAsync(submissionFile.StorageFileName, cancellationToken);
 
             _context.SubmissionFiles.Remove(submissionFile);
@@ -178,12 +162,7 @@ namespace TraineeManagement.Api.Services
         private async Task ValidateSubmissionExistsAsync(int submissionId, CancellationToken cancellationToken)
         {
             Submission? submission = await _context.Submissions
-                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == submissionId, cancellationToken);
-
-            if (submission is null)
-            {
-                throw new NotFoundException(ExceptionMessages.SubmissionNotFound(submissionId));
-            }
+                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == submissionId, cancellationToken) ?? throw new NotFoundException(ExceptionMessages.SubmissionNotFound(submissionId));
         }
         private void ValidateFile(IFormFile file)
         {
@@ -197,19 +176,21 @@ namespace TraineeManagement.Api.Services
             }
             string? extension = Path.GetExtension(file.FileName);
 
-            if (!_options.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            if (!_fileStorageOptions.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
                 throw new BadRequestException(ExceptionMessages.InvalidFileType);
             }
-            if (file.Length > _options.MaxFileSizeInMB * BytesPerUnit * BytesPerUnit)
+            if (file.Length > _fileStorageOptions.MaxFileSizeInMB * BytesPerUnit * BytesPerUnit)
             {
                 throw new BadRequestException(ExceptionMessages.FileTooLarge);
             }
         }
 
-        private SubmissionFile CreateSubmissionFile(int submissionId, UploadSubmissionFileRequest request,
+        private async Task<SubmissionFile> CreateSubmissionFileAsync(int submissionId, UploadSubmissionFileRequest request,
             string storageFileName, int uploadedBy)
         {
+            string filePath = Path.Combine(_fileStorageOptions.RootPath, storageFileName);
+            string checksum = await FileHelper.CalculateChecksumAsync(filePath);
             return new SubmissionFile
             {
                 SubmissionId = submissionId,
@@ -218,7 +199,8 @@ namespace TraineeManagement.Api.Services
                 ContentType = request.File.ContentType,
                 FileSize = request.File.Length,
                 UploadedBy = uploadedBy,
-                UploadedDate = DateTime.UtcNow
+                UploadedDate = DateTime.UtcNow,
+                Checksum = checksum
             };
         }
     }

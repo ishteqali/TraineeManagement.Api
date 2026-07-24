@@ -47,15 +47,11 @@ namespace TraineeManagement.Api.Services
         public async Task<TaskAssignmentResponse> CreateAssignmentAsync(CreateTaskAssignmentRequest request)
         {
             // Checking Trainee, Mentor and Task Exists or not
-            Trainee? trainee = await _context.Trainees.FindAsync(request.TraineeId);
-            if (trainee is null) throw new NotFoundException(ExceptionMessages.TrianeeNotFound(request.TraineeId));
+            Trainee? trainee = await _context.Trainees.FindAsync(request.TraineeId) ?? throw new NotFoundException(ExceptionMessages.TrianeeNotFound(request.TraineeId));
 
-            Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId);
-            if (mentor is null) throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
+            Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId) ?? throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
-            LearningTask? learningTask = await _context.LearningTasks.FindAsync(request.LearningTaskId);
-            if (learningTask is null) throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
-
+            LearningTask? learningTask = await _context.LearningTasks.FindAsync(request.LearningTaskId) ?? throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
             TaskAssignment newTaskAssignment = new TaskAssignment
             {
                 TraineeId = request.TraineeId,
