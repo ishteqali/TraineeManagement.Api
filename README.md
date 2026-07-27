@@ -13,6 +13,9 @@ The application uses **MySQL** as the primary database, **Redis** for distribute
 * Docker
 * Swagger
 
+## Architecture Diagram
+https://excalidraw.com/#json=N7KIhVBz85oOiR4n9Bl8g,agCsRUFsk1m7A9LNBTKEEw
+
 ## Project Structure
 
 ```text
@@ -458,7 +461,6 @@ After applying migrations, the database should contain tables similar to:
 - SubmissionFiles
 - Reviews
 - SubmissionProcessingJobs
-- Roles
 - Users
 
 ---
