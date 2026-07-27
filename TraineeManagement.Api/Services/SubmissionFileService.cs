@@ -57,6 +57,7 @@ namespace TraineeManagement.Api.Services
                 request.File.OpenReadStream(),
                 extension,
                 cancellationToken);
+            _logger.LogInformation("Upload file {storageFileName} saved", storageFileName);
             SubmissionFile submissionFile;
             try
             {
@@ -124,7 +125,7 @@ namespace TraineeManagement.Api.Services
                     subFile => subFile.Id == id,
                     cancellationToken) ?? throw new NotFoundException(ExceptionMessages.SubmissionFileNotFound(id));
             Stream? stream = await _fileStorageService.OpenReadAsync(submissionFile.StorageFileName, cancellationToken);
-
+            _logger.LogInformation("Submission file ID: {id} download successful", submissionFile.Id);
             return new DownloadSubmissionFileResponse
             {
                 Stream = stream,

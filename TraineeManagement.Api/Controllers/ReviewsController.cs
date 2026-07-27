@@ -26,17 +26,9 @@ namespace TraineeManagement.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<ReviewResponse>> CreateReview([FromBody] CreateReviewRequest request)
         {
-            try
-            {
                 ReviewResponse response = await _reviewService.CreateReviewAsync(request);
-                _logger.LogInformation("Review ID: {Id} created successfully.", response.Id);
+
                 return CreatedAtAction(nameof(GetReviewById), new { id = response.Id }, response);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning("Failed to create review: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
         }
  
         [HttpGet]

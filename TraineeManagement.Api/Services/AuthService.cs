@@ -6,18 +6,20 @@ using TraineeManagement.Api.DTOs;
 using TraineeManagement.Shared.Data;
 using TraineeManagement.Shared.Models;
 using TraineeManagement.Api.Interfaces;
+using Microsoft.Extensions.Options;
+using TraineeManagement.Api.Configurations;
 
 namespace TraineeManagement.Api.Services
 {
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSetting;
 
-        public AuthService(AppDbContext context, IConfiguration configuration)
+        public AuthService(AppDbContext context, IOptions<JwtSettings> jwtSetting)
         {
             _context = context;
-            _configuration = configuration;
+            _jwtSetting = jwtSetting.Value;
         }
 
         public async Task<LoginResponse?> LoginAsync(LoginRequest request)
@@ -27,7 +29,7 @@ namespace TraineeManagement.Api.Services
             {
                 return null;
             }
-            int expiryMinutes = _configuration.GetValue<int>("Jwt:ExpiryMinutes");
+            int expiryMinutes = _jwtSetting.ExpiryMinutes;
             string tokenString = GenerateJwtToken(user, expiryMinutes);
             return new LoginResponse
             {
@@ -44,7 +46,7 @@ namespace TraineeManagement.Api.Services
 
         public string GenerateJwtToken(User user, int expiryMinutes)
         {
-            string jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing from configuration.");
+            string jwtKey = _jwtSetting.Key ?? throw new InvalidOperationException("JWT Key is missing from configuration.");
             SymmetricSecurityKey? securityKey = new(System.Text.Encoding.UTF8.GetBytes(jwtKey));
             SigningCredentials? credentials = new(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -57,10 +59,10 @@ namespace TraineeManagement.Api.Services
             };
 
             JwtSecurityToken? token = new(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: _jwtSetting.Issuer,
+                audience: _jwtSetting.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:ExpiryMinutes")),
+                expires: DateTime.UtcNow.AddMinutes(_jwtSetting.ExpiryMinutes),
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);

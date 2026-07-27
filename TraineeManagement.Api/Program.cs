@@ -33,6 +33,7 @@ builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(Rab
 builder.Services.Configure<FileStorageOptions>(builder.Configuration.GetSection(FileStorageOptions.SectionName));
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection(RedisOptions.SectionName));
 builder.Services.Configure<TrainingDirectorySettings>(builder.Configuration.GetSection(TrainingDirectorySettings.SectionName));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 
 // Removing Upload file limit for kestral 
 builder.Services.Configure<FormOptions>(options =>

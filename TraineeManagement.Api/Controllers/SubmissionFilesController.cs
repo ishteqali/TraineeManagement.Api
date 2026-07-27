@@ -40,15 +40,12 @@ namespace TraineeManagement.Api.Controllers
             return Ok(response);
         }
 
-        [HttpGet("submission-files/{id:int}/download")]
+        [HttpGet("submission-files/download/{id:int}")]
         public async Task<IActionResult> Download(int id, CancellationToken cancellationToken)
         {
-            DownloadSubmissionFileResponse? response = await _submissionFileService.DownloadAsync(id, cancellationToken);
+            DownloadSubmissionFileResponse response = await _submissionFileService.DownloadAsync(id, cancellationToken);
 
-            return File(
-                response.Stream,
-                response.ContentType,
-                response.FileName);
+            return File(response.Stream, response.ContentType, response.FileName);
         }
         [HttpDelete("submission-files/{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
