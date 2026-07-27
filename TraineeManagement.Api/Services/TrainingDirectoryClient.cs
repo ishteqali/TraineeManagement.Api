@@ -21,7 +21,7 @@ namespace TraineeManagement.Api.Services
         {
             try
             {
-                using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseApi}{traineeId}");
+                using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseApi}{traineeId}/{correlationId}");
                 request.Headers.Add("X-Correlation-ID", correlationId);
 
                 using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);

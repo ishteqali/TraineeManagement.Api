@@ -21,6 +21,8 @@ using System.Net.Mime;
 using RabbitMQ.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using Polly;
+using System.Net;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
@@ -133,6 +135,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = redis.InstanceName;
 });
 
+// For interservice communication
+
 TrainingDirectorySettings trainingDirectorySettings = builder.Configuration.GetSection(TrainingDirectorySettings.SectionName).Get<TrainingDirectorySettings>()
     ?? throw new InvalidOperationException("Training Directory configuration missing.");
 
@@ -142,7 +146,28 @@ IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<ITraining
     client.Timeout = TimeSpan.FromSeconds(5);
     client.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
 });
-httpClientBuilder.AddStandardResilienceHandler();
+httpClientBuilder.AddStandardResilienceHandler(options =>
+{
+    options.Retry.MaxRetryAttempts = 5;
+    options.Retry.BackoffType = DelayBackoffType.Exponential;
+    options.Retry.UseJitter = true;
+
+    options.Retry.ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+        .Handle<HttpRequestException>()
+        .HandleResult(response =>
+        response.StatusCode == HttpStatusCode.RequestTimeout ||
+        response.StatusCode == HttpStatusCode.ServiceUnavailable ||
+        response.StatusCode == HttpStatusCode.TooManyRequests ||
+        (int)response.StatusCode >= 500
+        );
+
+    options.CircuitBreaker.FailureRatio = 0.5;
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(20);
+    options.CircuitBreaker.MinimumThroughput = 5;
+    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+});
 
 //RabbitMq connection String
 RabbitMqOptions rabbitMqOptions = builder.Configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
