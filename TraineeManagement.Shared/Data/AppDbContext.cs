@@ -30,12 +30,19 @@ namespace TraineeManagement.Shared.Data
             modelBuilder.Entity<User>().HasIndex(user => user.Username).IsUnique(); // for unique username
             modelBuilder.Entity<User>().HasIndex(user => user.Email).IsUnique(); // for unique email
 
+            string adminUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
+            string adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@gmail.com";
+            string adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin@123";
+
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+
+
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = 1,
-                Username = "admin",
-                Email = "admin@gmail.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin@123"),
+                Username = adminUsername,
+                Email = adminEmail,
+                PasswordHash = hashedPassword,
                 Role = UserRole.Admin,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
