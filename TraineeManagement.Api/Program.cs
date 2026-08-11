@@ -140,7 +140,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 TrainingDirectorySettings trainingDirectorySettings = builder.Configuration.GetSection(TrainingDirectorySettings.SectionName).Get<TrainingDirectorySettings>()
     ?? throw new InvalidOperationException("Training Directory configuration missing.");
 
-IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<ITrainingDirectoryClient, TrainingDirectoryClient>(client =>
+IHttpClientBuilder? httpClientBuilder = builder.Services.AddHttpClient<IGenericHttpClient, GenericHttpClient>(client =>
 {
     client.BaseAddress = new Uri(trainingDirectorySettings!.BaseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
@@ -180,7 +180,7 @@ builder.Services.AddHealthChecks()
     .AddRedis(redis.ConnectionString, name: "redis", tags: tags)
     .AddRabbitMQ(factory: serviceProvider =>
         {
-            ConnectionFactory? factory = new ConnectionFactory
+            ConnectionFactory? factory = new()
             {
                 HostName = rabbitMqOptions.Host,
                 Port = rabbitMqOptions.Port,
@@ -203,6 +203,7 @@ builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 builder.Services.AddScoped<IProcessingJobService, ProcessingJobService>();
+builder.Services.AddScoped<ITrainingDirectoryClient, TrainingDirectoryClient>();
 
 
 WebApplication? app = builder.Build();

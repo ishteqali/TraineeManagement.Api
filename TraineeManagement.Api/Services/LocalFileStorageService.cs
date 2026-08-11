@@ -24,7 +24,7 @@ namespace TraineeManagement.Api.Services
 
             string? filePath = GetFilePath(storageFileName);
 
-            await using FileStream? outputStream = new FileStream(
+            await using FileStream? outputStream = new(
                 filePath,
                 FileMode.Create,
                 FileAccess.Write,

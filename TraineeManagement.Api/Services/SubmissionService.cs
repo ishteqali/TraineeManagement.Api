@@ -46,15 +46,7 @@ namespace TraineeManagement.Api.Services
             TaskAssignment? taskAssignment = await _context.TaskAssignments
                                     .Include(taskAssignment => taskAssignment.LearningTask)
                                     .FirstOrDefaultAsync(taskAssignment => taskAssignment.Id == request.TaskAssignmentId) ?? throw new NotFoundException(ExceptionMessages.TaskAssignmentNotFound(request.TaskAssignmentId));
-            Submission submission = new Submission
-            {
-                TaskAssignmentId = request.TaskAssignmentId,
-                SubmissionUrl = request.SubmissionUrl,
-                Notes = request.Notes,
-                SubmittedDate = DateTime.UtcNow,
-                Status = EnumHelper.ParseOrThrow<SubmissionStatus>(request.Status, nameof(request.Status)),
-                TaskAssignment = taskAssignment
-            };
+            Submission submission = new(request.TaskAssignmentId, taskAssignment, request.SubmissionUrl, request.Notes, DateTime.UtcNow, EnumHelper.ParseOrThrow<SubmissionStatus>(request.Status, nameof(request.Status))) { };
 
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();

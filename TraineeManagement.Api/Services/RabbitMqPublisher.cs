@@ -21,7 +21,7 @@ namespace TraineeManagement.Api.Services
             _logger = logger;
         }
 
-        public async Task<bool> PublishSubmissionProcessingAsync(SubmissionProcessingRequested message, CancellationToken cancellationToken = default)
+        public async Task<bool> PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -56,10 +56,8 @@ namespace TraineeManagement.Api.Services
                 BasicProperties properties = new()
                 {
                     Persistent = true,
-                    MessageId = message.MessageId.ToString(),
-                    CorrelationId = message.CorrelationId.ToString(),
                     ContentType = MediaTypeNames.Application.Json,
-                    Type = nameof(SubmissionProcessingRequested)
+                    Type = typeof(TMessage).Name
                 };
 
                 await channel.BasicPublishAsync(
@@ -70,14 +68,16 @@ namespace TraineeManagement.Api.Services
                     body: body,
                     cancellationToken: cancellationToken);
 
-                _logger.LogInformation("RabbitMQ message published successfully. MessageId: {MessageId}, CorrelationId: {CorrelationId}, SubmissionId: {SubmissionId}",
-                    message.MessageId, message.CorrelationId, message.SubmissionId);
+                _logger.LogInformation("RabbitMQ message published successfully. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
+                    typeof(TMessage).GetProperty("MessageId")?.GetValue(message),
+                    typeof(TMessage).GetProperty("CorrelationId")?.GetValue(message));
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to publish RabbitMQ message. MessageId: {MessageId}, CorrelationId: {CorrelationId}, SubmissionId: {SubmissionId}",
-                    message.MessageId, message.CorrelationId, message.SubmissionId);
+                _logger.LogError(ex, "Failed to publish RabbitMQ message. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
+                    typeof(TMessage).GetProperty("MessageId")?.GetValue(message),
+                    typeof(TMessage).GetProperty("CorrelationId")?.GetValue(message));
                 return false;
             }
         }

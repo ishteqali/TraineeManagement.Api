@@ -97,16 +97,7 @@ namespace TraineeManagement.Api.Services
 
         public async Task<MentorResponse> AddMentorAsync(CreateMentorRequest request)
         {
-            Mentor newMentor = new()
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Expertise = request.Expertise,
-                Status = EnumHelper.ParseOrThrow<MentorStatus>(request.Status, nameof(request.Status)),
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            };
+            Mentor newMentor = new(request.FirstName, request.LastName, request.Email, request.Expertise, EnumHelper.ParseOrThrow<MentorStatus>(request.Status, nameof(request.Status))) { };
 
             await _context.Mentors.AddAsync(newMentor);
             await _context.SaveChangesAsync();

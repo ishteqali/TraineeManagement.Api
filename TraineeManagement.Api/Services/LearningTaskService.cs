@@ -97,16 +97,7 @@ namespace TraineeManagement.Api.Services
 
         public async Task<LearningTaskResponse> AddLearningTaskAsync(CreateLearningTaskRequest request)
         {
-            LearningTask newLearningTask = new()
-            {
-                Title = request.Title,
-                Description = request.Description,
-                ExpectedTechStack = request.ExpectedTechStack,
-                DueDate = request.DueDate,
-                Status = EnumHelper.ParseOrThrow<LearningTaskStatus>(request.Status, nameof(request.Status)),
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            };
+            LearningTask newLearningTask = new(request.Title, request.Description, request.ExpectedTechStack, request.DueDate, EnumHelper.ParseOrThrow<LearningTaskStatus>(request.Status, nameof(request.Status))) { };
 
             await _context.LearningTasks.AddAsync(newLearningTask);
             await _context.SaveChangesAsync();

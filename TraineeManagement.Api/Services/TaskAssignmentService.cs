@@ -52,19 +52,7 @@ namespace TraineeManagement.Api.Services
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId) ?? throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
 
             LearningTask? learningTask = await _context.LearningTasks.FindAsync(request.LearningTaskId) ?? throw new NotFoundException(ExceptionMessages.LearningTaskNotFound(request.LearningTaskId));
-            TaskAssignment newTaskAssignment = new TaskAssignment
-            {
-                TraineeId = request.TraineeId,
-                MentorId = request.MentorId,
-                LearningTaskId = request.LearningTaskId,
-                AssignedDate = DateTime.UtcNow,
-                DueDate = request.DueDate,
-                Status = EnumHelper.ParseOrThrow<TaskAssignmentStatus>(request.Status, nameof(request.Status)),
-                Remarks = request.Remarks,
-                Trainee = trainee,
-                Mentor = mentor,
-                LearningTask = learningTask
-            };
+            TaskAssignment newTaskAssignment = new(request.TraineeId, trainee, request.MentorId, mentor, request.LearningTaskId, learningTask, DateTime.UtcNow, request.DueDate, EnumHelper.ParseOrThrow<TaskAssignmentStatus>(request.Status, nameof(request.Status)), request.Remarks) { };
             _context.TaskAssignments.Add(newTaskAssignment);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Task Assignment Created Successfully with ID: {TaskAssignmentId} at Timestamp: {Timestamp}",

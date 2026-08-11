@@ -106,16 +106,7 @@ namespace TraineeManagement.Api.Services
 
         public async Task<TraineeResponse> AddTraineeAsync(CreateTraineeRequest request)
         {
-            Trainee newTrainee = new()
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                TechStack = request.TechStack,
-                Status = EnumHelper.ParseOrThrow<TraineeStatus>(request.Status, nameof(request.Status)),
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            };
+            Trainee newTrainee = new(request.FirstName, request.LastName, request.Email, request.TechStack, EnumHelper.ParseOrThrow<TraineeStatus>(request.Status, nameof(request.Status))) { };
 
             await _context.Trainees.AddAsync(newTrainee);
             await _context.SaveChangesAsync();

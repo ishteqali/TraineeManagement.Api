@@ -4,7 +4,7 @@ namespace TraineeManagement.Api.Interfaces
 {
     public interface IMessagePublisher
     {
-        Task<bool> PublishSubmissionProcessingAsync(SubmissionProcessingRequested message, CancellationToken cancellationToken = default);
+        Task<bool> PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default);
     }
 }
 

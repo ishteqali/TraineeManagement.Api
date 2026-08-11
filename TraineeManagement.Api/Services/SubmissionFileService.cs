@@ -96,7 +96,7 @@ namespace TraineeManagement.Api.Services
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            bool published = await _messagePublisher.PublishSubmissionProcessingAsync(message, cancellationToken);
+            bool published = await _messagePublisher.PublishAsync(message, cancellationToken);
 
             if (!published)
             {
@@ -192,17 +192,10 @@ namespace TraineeManagement.Api.Services
         {
             string filePath = Path.Combine(_fileStorageOptions.RootPath, storageFileName);
             string checksum = await FileHelper.CalculateChecksumAsync(filePath);
-            return new SubmissionFile
-            {
-                SubmissionId = submissionId,
-                OriginalFileName = request.File.FileName,
-                StorageFileName = storageFileName,
-                ContentType = request.File.ContentType,
-                FileSize = request.File.Length,
-                UploadedBy = uploadedBy,
-                UploadedDate = DateTime.UtcNow,
-                Checksum = checksum
-            };
+
+            Submission submission = await _context.Submissions
+                .FirstOrDefaultAsync(currentSubmission => currentSubmission.Id == submissionId) ?? throw new NotFoundException(ExceptionMessages.SubmissionNotFound(submissionId));
+            return new SubmissionFile(submissionId, submission, request.File.FileName, storageFileName, request.File.ContentType, request.File.Length, checksum, uploadedBy, DateTime.UtcNow) { };
         }
     }
 }

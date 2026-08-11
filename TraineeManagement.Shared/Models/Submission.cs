@@ -1,9 +1,24 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using TraineeManagement.Shared.Enums;
 namespace TraineeManagement.Shared.Models
 {
     public class Submission
     {
+        public Submission()
+        {
+        }
+
+        [SetsRequiredMembers]
+        public Submission(int taskAssignmentId, TaskAssignment taskAssignment, string submissionUrl, string notes, DateTime submittedDate, SubmissionStatus status)
+        {
+            TaskAssignmentId = taskAssignmentId;
+            TaskAssignment = taskAssignment;
+            SubmissionUrl = submissionUrl;
+            Notes = notes;
+            SubmittedDate = submittedDate;
+            Status = status;
+        }
         public int Id { get; set; }
 
         public int TaskAssignmentId { get; set; }

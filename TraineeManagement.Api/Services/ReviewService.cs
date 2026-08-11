@@ -45,17 +45,7 @@ namespace TraineeManagement.Api.Services
             Submission? submission = await _context.Submissions.FindAsync(request.SubmissionId) ?? throw new NotFoundException(ExceptionMessages.SubmissionNotFound(request.SubmissionId));
 
             Mentor? mentor = await _context.Mentors.FindAsync(request.MentorId) ?? throw new NotFoundException(ExceptionMessages.MentorNotFound(request.MentorId));
-            Review review = new Review
-            {
-                SubmissionId = request.SubmissionId,
-                MentorId = request.MentorId,
-                Feedback = request.Feedback,
-                Score = request.Score,
-                ReviewStatus = EnumHelper.ParseOrThrow<ReviewStatus>(request.ReviewStatus, nameof(request.ReviewStatus)),
-                ReviewedDate = DateTime.UtcNow,
-                Mentor = mentor,
-                Submission = submission
-            };
+            Review review = new(request.SubmissionId, submission, request.MentorId, mentor, request.Feedback, request.Score, EnumHelper.ParseOrThrow<ReviewStatus>(request.ReviewStatus, nameof(request.ReviewStatus)), DateTime.UtcNow) { };
 
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();

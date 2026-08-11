@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using TraineeManagement.Shared.Enums;
 
@@ -7,6 +8,21 @@ namespace TraineeManagement.Shared.Models
 {
     public class Trainee
     {
+        public Trainee()
+        {
+        }
+
+        [SetsRequiredMembers]
+        public Trainee(string firstName, string lastName, string email, string techStack, TraineeStatus status)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            TechStack = techStack;
+            Status = status;
+            CreatedDate = DateTime.UtcNow;
+            UpdatedDate = DateTime.UtcNow;
+        }
         public int Id { get; set; }
         public required string FirstName { get; set; }
         public required string LastName { get; set; }

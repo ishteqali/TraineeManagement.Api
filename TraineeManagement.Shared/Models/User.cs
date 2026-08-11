@@ -1,8 +1,23 @@
+using System.Diagnostics.CodeAnalysis;
 using TraineeManagement.Shared.Enums;
 namespace TraineeManagement.Shared.Models
 {
     public class User
     {
+        public User()
+        {
+        }
+
+        [SetsRequiredMembers]
+        public User(string username, string email, string passwordHash, UserRole role)
+        {
+            Username = username;
+            Email = email;
+            PasswordHash = passwordHash;
+            Role = role;
+            CreatedDate = DateTime.UtcNow;
+            UpdatedDate = DateTime.UtcNow;
+        }
         public int Id { get; set; }
         public required string Username { get; set; }
         public required string Email { get; set; }

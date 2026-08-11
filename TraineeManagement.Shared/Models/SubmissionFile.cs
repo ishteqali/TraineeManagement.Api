@@ -1,8 +1,27 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 namespace TraineeManagement.Shared.Models
 {
     public class SubmissionFile
     {
+        public SubmissionFile()
+        {
+        }
+
+
+        [SetsRequiredMembers]
+        public SubmissionFile(int submissionId, Submission submission, string originalFileName, string storageFileName, string contentType, long fileSize, string? checksum, int uploadedBy, DateTime uploadedDate)
+        {
+            SubmissionId = submissionId;
+            Submission = submission;
+            OriginalFileName = originalFileName;
+            StorageFileName = storageFileName;
+            ContentType = contentType;
+            FileSize = fileSize;
+            Checksum = checksum;
+            UploadedBy = uploadedBy;
+            UploadedDate = uploadedDate;
+        }
         public int Id { get; set; }
 
         public int SubmissionId { get; set; }

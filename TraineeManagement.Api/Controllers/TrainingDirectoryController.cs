@@ -25,7 +25,7 @@ namespace TraineeManagement.Api.Controllers
             TraineeProfileResponse? trainee = await _trainingDirectoryClient.GetTraineeAsync(id, correlationId, cancellationToken);
             if (trainee == null)
             {
-                ErrorResponse errorResponse = new ErrorResponse
+                ErrorResponse errorResponse = new()
                 {
                     StatusCode = StatusCodes.Status503ServiceUnavailable,
                     Message = ExceptionMessages.TrainingDirectoryNotAvailable,
