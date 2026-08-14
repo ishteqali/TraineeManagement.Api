@@ -8,6 +8,7 @@ using TraineeManagement.Shared.Models;
 using TraineeManagement.Api.Interfaces;
 using Microsoft.Extensions.Options;
 using TraineeManagement.Api.Configurations;
+using System.Text;
 
 namespace TraineeManagement.Api.Services
 {
@@ -47,7 +48,7 @@ namespace TraineeManagement.Api.Services
         public string GenerateJwtToken(User user, int expiryMinutes)
         {
             string jwtKey = _jwtSetting.Key ?? throw new InvalidOperationException("JWT Key is missing from configuration.");
-            SymmetricSecurityKey? securityKey = new(System.Text.Encoding.UTF8.GetBytes(jwtKey));
+            SymmetricSecurityKey? securityKey = new(Encoding.UTF8.GetBytes(jwtKey));
             SigningCredentials? credentials = new(securityKey, SecurityAlgorithms.HmacSha256);
 
             Claim[]? claims = new[]
@@ -62,7 +63,7 @@ namespace TraineeManagement.Api.Services
                 issuer: _jwtSetting.Issuer,
                 audience: _jwtSetting.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSetting.ExpiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);

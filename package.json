@@ -1,0 +1,28 @@
+{
+  "name": "traineemanagement",
+  "version": "1.0.0",
+  "description": "The **Trainee Management System** is a backend application built using **ASP.NET Core Web API** for managing trainees, mentors, learning tasks, task assignments, submissions, reviews, and asynchronous file processing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ishteqali/TraineeManagement.Api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ishteqali/TraineeManagement.Api/issues"
+  },
+  "homepage": "https://github.com/ishteqali/TraineeManagement.Api#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0"
+  }
+}
