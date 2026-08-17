@@ -1,4 +1,4 @@
-import { APIRequestContext, expect } from "@playwright/test";
+import { APIRequestContext, APIResponse, expect } from "@playwright/test";
 
 export class ApiClient {
   private readonly request: APIRequestContext;
@@ -19,19 +19,19 @@ export class ApiClient {
     };
   }
 
-  public async getResponse(url: string) {
+  public async get(url: string): Promise<APIResponse> {
     return await this.request.get(url, { headers: this.getHeaders() });
   }
 
-  public async postResponse(url: string, data: unknown) {
+  public async post(url: string, data?: unknown): Promise<APIResponse> {
     return await this.request.post(url, { headers: this.getHeaders(), data });
   }
 
-  public async putResponse(url: string, data: unknown) {
+  public async put(url: string, data?: unknown): Promise<APIResponse> {
     return await this.request.put(url, { headers: this.getHeaders(), data });
   }
 
-  public async deleteReponse(url: string) {
+  public async delete(url: string): Promise<APIResponse> {
     return await this.request.delete(url, { headers: this.getHeaders() });
   }
 }
