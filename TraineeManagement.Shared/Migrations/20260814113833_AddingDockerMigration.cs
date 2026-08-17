@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace TraineeManagement.Shared.Migrations
 {
     /// <inheritdoc />
-    public partial class AddingAll : Migration
+    public partial class AddingDockerMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -252,7 +252,7 @@ namespace TraineeManagement.Shared.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "Id", "CreatedDate", "Email", "PasswordHash", "Role", "UpdatedDate", "Username" },
-                values: new object[] { 1, new DateTime(2026, 7, 20, 14, 14, 29, 893, DateTimeKind.Utc).AddTicks(6789), "admin@gmail.com", "$2a$11$XKbckJoJ.NWtDkTbMHekH.bHXqD476VCAbVdfRBAYsqmPfgKRtq.m", "Admin", new DateTime(2026, 7, 20, 14, 14, 29, 893, DateTimeKind.Utc).AddTicks(7036), "admin" });
+                values: new object[] { 1, new DateTime(2026, 8, 14, 11, 38, 32, 791, DateTimeKind.Utc).AddTicks(8989), "admin@gmail.com", "$2a$11$VBOw.tDkhTQICXoYf2D6FOne/ybqHFqWkUIf6Vp/5KeMxo4iB7yJ6", "Admin", new DateTime(2026, 8, 14, 11, 38, 32, 791, DateTimeKind.Utc).AddTicks(9323), "admin" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProcessingJobs_SubmissionFileId",

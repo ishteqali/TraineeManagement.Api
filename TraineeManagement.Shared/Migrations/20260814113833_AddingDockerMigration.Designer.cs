@@ -11,8 +11,8 @@ using TraineeManagement.Shared.Data;
 namespace TraineeManagement.Shared.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260720141430_AddingAll")]
-    partial class AddingAll
+    [Migration("20260814113833_AddingDockerMigration")]
+    partial class AddingDockerMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -359,11 +359,11 @@ namespace TraineeManagement.Shared.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(2026, 7, 20, 14, 14, 29, 893, DateTimeKind.Utc).AddTicks(6789),
+                            CreatedDate = new DateTime(2026, 8, 14, 11, 38, 32, 791, DateTimeKind.Utc).AddTicks(8989),
                             Email = "admin@gmail.com",
-                            PasswordHash = "$2a$11$XKbckJoJ.NWtDkTbMHekH.bHXqD476VCAbVdfRBAYsqmPfgKRtq.m",
+                            PasswordHash = "$2a$11$VBOw.tDkhTQICXoYf2D6FOne/ybqHFqWkUIf6Vp/5KeMxo4iB7yJ6",
                             Role = "Admin",
-                            UpdatedDate = new DateTime(2026, 7, 20, 14, 14, 29, 893, DateTimeKind.Utc).AddTicks(7036),
+                            UpdatedDate = new DateTime(2026, 8, 14, 11, 38, 32, 791, DateTimeKind.Utc).AddTicks(9323),
                             Username = "admin"
                         });
                 });

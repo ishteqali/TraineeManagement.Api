@@ -294,7 +294,7 @@ docker compose logs redis
 | Service | URL |
 |----------|-----|
 | Swagger UI | http://localhost:5001/swagger |
-| Training Directory API | http://localhost:5002/swagger |
+| Training Directory API | http://localhost:5002 |
 | RabbitMQ Management | http://localhost:15672 |
 
 ---
