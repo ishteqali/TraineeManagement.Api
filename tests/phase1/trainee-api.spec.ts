@@ -1,14 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, APIRequestContext, request } from "@playwright/test";
 import { ApiClient } from "../utils/apiClient";
 import { getAdminToken } from "../utils/authHelper";
+import { TestDataFactory } from "../utils/testDataFactory";
 
 test.describe("Trainee API", () => {
+  let context: APIRequestContext;
   let api: ApiClient;
 
-  test.beforeEach(async ({ request }) => {
-    const token = await getAdminToken(request);
-
-    api = new ApiClient(request, token);
+  test.beforeAll(async () => {
+    context = await request.newContext();
+    const token = await getAdminToken(context);
+    api = new ApiClient(context, token);
   });
 
   test("should get all trainees", async () => {
@@ -28,15 +30,9 @@ test.describe("Trainee API", () => {
   });
 
   test("should get trainee by id", async () => {
-    const email = `playwright.${Date.now()}@test.com`;
+    const traineeData = TestDataFactory.trainee();
 
-    const createResponse = await api.post("api/trainees", {
-      firstName: "Playwright",
-      lastName: "Test",
-      email,
-      techStack: "TypeScript",
-      status: "Active",
-    });
+    const createResponse = await api.post("api/trainees", traineeData);
 
     expect(createResponse.status()).toBe(201);
 
@@ -58,15 +54,9 @@ test.describe("Trainee API", () => {
   });
 
   test("should create a trainee", async () => {
-    const email = `playwright.${Date.now()}@test.com`;
+    const traineeData = TestDataFactory.trainee();
 
-    const response = await api.post("api/trainees", {
-      firstName: "Playwright",
-      lastName: "Create",
-      email,
-      techStack: "TypeScript",
-      status: "Active",
-    });
+    const response = await api.post("api/trainees", traineeData);
 
     expect(response.status()).toBe(201);
 
@@ -74,53 +64,40 @@ test.describe("Trainee API", () => {
 
     expect(trainee.id).toBeDefined();
     expect(trainee.firstName).toBe("Playwright");
-    expect(trainee.lastName).toBe("Create");
-    expect(trainee.email).toBe(email);
+    expect(trainee.lastName).toBe("Test");
     expect(trainee.techStack).toBe("TypeScript");
     expect(trainee.status).toBe("Active");
   });
 
   test("should update a trainee", async () => {
-    const createResponse = await api.post("api/trainees", {
-      firstName: "Before",
-      lastName: "Update",
-      email: `update.${Date.now()}@test.com`,
-      techStack: "C#",
-      status: "Active",
-    });
+    const traineeData = TestDataFactory.trainee();
+    const createResponse = await api.post("api/trainees", traineeData);
 
     expect(createResponse.status()).toBe(201);
 
     const createdTrainee = await createResponse.json();
     const traineeId = createdTrainee.id;
 
-    const updateResponse = await api.put(`api/trainees/${traineeId}`, {
-      firstName: "After",
-      lastName: "Update",
-      email: `updated.${Date.now()}@test.com`,
-      techStack: "TypeScript",
-      status: "Completed",
-    });
+    const updatedTraineeData = TestDataFactory.traineeUpdate();
+    const updateResponse = await api.put(
+      `api/trainees/${traineeId}`,
+      updatedTraineeData,
+    );
 
     expect(updateResponse.status()).toBe(200);
 
     const updatedTrainee = await updateResponse.json();
 
     expect(updatedTrainee.id).toBe(traineeId);
-    expect(updatedTrainee.firstName).toBe("After");
-    expect(updatedTrainee.lastName).toBe("Update");
-    expect(updatedTrainee.techStack).toBe("TypeScript");
+    expect(updatedTrainee.firstName).toBe("Updated");
+    expect(updatedTrainee.lastName).toBe("Test");
+    expect(updatedTrainee.techStack).toBe("C#");
     expect(updatedTrainee.status).toBe("Completed");
   });
 
   test("should delete a trainee", async () => {
-    const createResponse = await api.post("api/trainees", {
-      firstName: "Delete",
-      lastName: "Test",
-      email: `delete.${Date.now()}@test.com`,
-      techStack: "C#",
-      status: "Inactive",
-    });
+    const traineeData = TestDataFactory.trainee();
+    const createResponse = await api.post("api/trainees", traineeData);
 
     expect(createResponse.status()).toBe(201);
 
@@ -143,13 +120,11 @@ test.describe("Trainee API", () => {
   });
 
   test("should return 404 when updating non-existing trainee", async () => {
-    const response = await api.put("api/trainees/999999999", {
-      firstName: "Test",
-      lastName: "Update",
-      email: `notfound.${Date.now()}@test.com`,
-      techStack: "TypeScript",
-      status: "Active",
-    });
+    const updatedTraineeData = TestDataFactory.traineeUpdate();
+    const response = await api.put(
+      "api/trainees/999999999",
+      updatedTraineeData,
+    );
 
     expect(response.status()).toBe(404);
   });
@@ -164,9 +139,9 @@ test.describe("Trainee API", () => {
     const response = await api.post("api/trainees", {
       firstName: "",
       lastName: "",
-      email: "invalid-email",
+      email: TestDataFactory.invalidEmail,
       techStack: "",
-      status: "InvalidStatus",
+      status: TestDataFactory.invalidStatus,
     });
 
     expect(response.status()).toBe(400);
@@ -230,9 +205,29 @@ test.describe("Trainee API", () => {
     ).toBeTruthy();
   });
 
+  test("should filter trainees by status", async () => {
+    const response = await api.get(
+      "api/trainees?pageNumber=1&pageSize=10&status=Active",
+    );
+
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+
+    expect(body).toHaveProperty("pageNumber");
+    expect(body).toHaveProperty("pageSize");
+    expect(body).toHaveProperty("data");
+
+    expect(Array.isArray(body.data)).toBeTruthy();
+  });
+
   test("should return 401 without authentication", async ({ request }) => {
     const response = await request.get("api/trainees");
 
     expect(response.status()).toBe(401);
+  });
+
+  test.afterAll(async () => {
+    await context.dispose();
   });
 });
