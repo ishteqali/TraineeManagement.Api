@@ -50,10 +50,10 @@ test.describe("Trainee API", () => {
 
     expect(trainee).toBeDefined();
     expect(trainee.id).toBe(traineeId);
-    expect(trainee.firstName).toBe("Playwright");
-    expect(trainee.lastName).toBe("Test");
-    expect(trainee.techStack).toBe("TypeScript");
-    expect(trainee.status).toBe("Active");
+    expect(trainee.firstName).toBe(traineeData.firstName);
+    expect(trainee.lastName).toBe(traineeData.lastName);
+    expect(trainee.techStack).toBe(traineeData.techStack);
+    expect(trainee.status).toBe(traineeData.status);
 
     await cleanup.deleteTrainee(traineeId);
   });
@@ -100,10 +100,10 @@ test.describe("Trainee API", () => {
     const updatedTrainee = await updateResponse.json();
 
     expect(updatedTrainee.id).toBe(traineeId);
-    expect(updatedTrainee.firstName).toBe("Updated");
-    expect(updatedTrainee.lastName).toBe("Test");
-    expect(updatedTrainee.techStack).toBe("C#");
-    expect(updatedTrainee.status).toBe("Completed");
+    expect(updatedTrainee.firstName).toBe(updatedTraineeData.firstName);
+    expect(updatedTrainee.lastName).toBe(updatedTraineeData.lastName);
+    expect(updatedTrainee.techStack).toBe(updatedTraineeData.techStack);
+    expect(updatedTrainee.status).toBe(updatedTraineeData.status);
 
     await cleanup.deleteTrainee(traineeId);
   });
