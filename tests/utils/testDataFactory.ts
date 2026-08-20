@@ -23,63 +23,52 @@ export class TestDataFactory {
     return new Date().toISOString();
   }
 
-  public static trainee() {
+  public static trainee(overrides?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    techStack?: string;
+    status?: string;
+  }) {
     return {
-      firstName: "Playwright",
-      lastName: "Test",
-      email: this.uniqueEmail("trainee"),
-      techStack: "TypeScript",
-      status: "Active",
+      firstName: overrides?.firstName ?? "Playwright",
+      lastName: overrides?.lastName ?? "Test",
+      email: overrides?.email ?? this.uniqueEmail("trainee"),
+      techStack: overrides?.techStack ?? "TypeScript",
+      status: overrides?.status ?? "Active",
     };
   }
 
-  public static traineeUpdate() {
+  public static mentor(overrides?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    expertise?: string;
+    status?: string;
+  }) {
     return {
-      firstName: "Updated",
-      lastName: "Test",
-      email: this.uniqueEmail("updated.trainee"),
-      techStack: "C#",
-      status: "Completed",
+      firstName: overrides?.firstName ?? "Playwright",
+      lastName: overrides?.lastName ?? "Mentor",
+      email: overrides?.email ?? this.uniqueEmail("mentor"),
+      expertise: overrides?.expertise ?? "TypeScript",
+      status: overrides?.status ?? "Active",
     };
   }
 
-  public static mentor() {
+  public static learningTask(overrides?: {
+    title?: string;
+    description?: string;
+    expectedTechStack?: string;
+    dueDate?: string;
+    status?: string;
+  }) {
     return {
-      firstName: "Playwright",
-      lastName: "Mentor",
-      email: this.uniqueEmail("mentor"),
-      expertise: "TypeScript",
-      status: "Active",
-    };
-  }
-
-  public static mentorUpdate() {
-    return {
-      firstName: "Updated",
-      lastName: "Mentor",
-      email: this.uniqueEmail("updated.mentor"),
-      expertise: "C#",
-      status: "Active",
-    };
-  }
-
-  public static learningTask() {
-    return {
-      title: `Playwright Learning Task ${this.today()}`,
-      description: "Learning task created for API testing.",
-      expectedTechStack: "TypeScript",
-      dueDate: this.futureDate(7),
-      status: "Draft",
-    };
-  }
-
-  public static learningTaskUpdate() {
-    return {
-      title: `Updated Learning Task ${this.today()}`,
-      description: "Learning task updated during API testing.",
-      expectedTechStack: "C#",
-      dueDate: this.futureDate(14),
-      status: "Published",
+      title: overrides?.title ?? `Playwright Learning Task ${this.today()}`,
+      description:
+        overrides?.description ?? "Learning task created for API testing.",
+      expectedTechStack: overrides?.expectedTechStack ?? "TypeScript",
+      dueDate: overrides?.dueDate ?? this.futureDate(7),
+      status: overrides?.status ?? "Draft",
     };
   }
 

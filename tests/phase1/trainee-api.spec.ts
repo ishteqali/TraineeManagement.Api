@@ -2,15 +2,18 @@ import { test, expect, APIRequestContext, request } from "@playwright/test";
 import { ApiClient } from "../utils/apiClient";
 import { getAdminToken } from "../utils/authHelper";
 import { TestDataFactory } from "../utils/testDataFactory";
+import { CleanupHelper } from "../utils/cleanupHelper";
 
 test.describe("Trainee API", () => {
   let context: APIRequestContext;
   let api: ApiClient;
+  let cleanup: CleanupHelper;
 
   test.beforeAll(async () => {
     context = await request.newContext();
     const token = await getAdminToken(context);
     api = new ApiClient(context, token);
+    cleanup = new CleanupHelper(api);
   });
 
   test("should get all trainees", async () => {
@@ -51,6 +54,8 @@ test.describe("Trainee API", () => {
     expect(trainee.lastName).toBe("Test");
     expect(trainee.techStack).toBe("TypeScript");
     expect(trainee.status).toBe("Active");
+
+    await cleanup.deleteTrainee(traineeId);
   });
 
   test("should create a trainee", async () => {
@@ -67,6 +72,8 @@ test.describe("Trainee API", () => {
     expect(trainee.lastName).toBe("Test");
     expect(trainee.techStack).toBe("TypeScript");
     expect(trainee.status).toBe("Active");
+
+    await cleanup.deleteTrainee(trainee.id);
   });
 
   test("should update a trainee", async () => {
@@ -78,7 +85,11 @@ test.describe("Trainee API", () => {
     const createdTrainee = await createResponse.json();
     const traineeId = createdTrainee.id;
 
-    const updatedTraineeData = TestDataFactory.traineeUpdate();
+    const updatedTraineeData = TestDataFactory.trainee({
+      firstName: "Updated",
+      techStack: "C#",
+      status: "Completed",
+    });
     const updateResponse = await api.put(
       `api/trainees/${traineeId}`,
       updatedTraineeData,
@@ -93,6 +104,8 @@ test.describe("Trainee API", () => {
     expect(updatedTrainee.lastName).toBe("Test");
     expect(updatedTrainee.techStack).toBe("C#");
     expect(updatedTrainee.status).toBe("Completed");
+
+    await cleanup.deleteTrainee(traineeId);
   });
 
   test("should delete a trainee", async () => {
@@ -120,7 +133,11 @@ test.describe("Trainee API", () => {
   });
 
   test("should return 404 when updating non-existing trainee", async () => {
-    const updatedTraineeData = TestDataFactory.traineeUpdate();
+    const updatedTraineeData = TestDataFactory.trainee({
+      firstName: "Updated",
+      techStack: "C#",
+      status: "Completed",
+    });
     const response = await api.put(
       "api/trainees/999999999",
       updatedTraineeData,
@@ -136,13 +153,14 @@ test.describe("Trainee API", () => {
   });
 
   test("should return 400 for invalid trainee data", async () => {
-    const response = await api.post("api/trainees", {
+    const invalidTrainee = TestDataFactory.trainee({
       firstName: "",
       lastName: "",
-      email: TestDataFactory.invalidEmail,
+      email: TestDataFactory.invalidEmail(),
       techStack: "",
-      status: TestDataFactory.invalidStatus,
+      status: TestDataFactory.invalidStatus(),
     });
+    const response = await api.post("api/trainees", invalidTrainee);
 
     expect(response.status()).toBe(400);
 
@@ -152,43 +170,43 @@ test.describe("Trainee API", () => {
   });
 
   test("should return 400 when first name is missing", async () => {
+    const traineeData = TestDataFactory.trainee();
+
     const response = await api.post("api/trainees", {
-      lastName: "Test",
-      email: `missing.${Date.now()}@test.com`,
-      techStack: "TypeScript",
-      status: "Active",
+      lastName: traineeData.lastName,
+      email: traineeData.email,
+      techStack: traineeData.techStack,
+      status: traineeData.status,
     });
 
     expect(response.status()).toBe(400);
   });
 
   test("should return 400 for invalid email", async () => {
-    const response = await api.post("api/trainees", {
-      firstName: "Invalid",
-      lastName: "Email",
-      email: "invalid-email",
-      techStack: "TypeScript",
-      status: "Active",
+    const invalidEmailTrainee = TestDataFactory.trainee({
+      email: TestDataFactory.invalidEmail(),
     });
+    const response = await api.post("api/trainees", invalidEmailTrainee);
 
     expect(response.status()).toBe(400);
   });
 
   test("should search trainees", async () => {
     const uniqueName = `Search${Date.now()}`;
-
-    const createResponse = await api.post("api/trainees", {
+    const searchTrainee = TestDataFactory.trainee({
       firstName: uniqueName,
-      lastName: "Trainee",
       email: `${uniqueName.toLowerCase()}@test.com`,
-      techStack: "TypeScript",
-      status: "Active",
     });
+
+    const createResponse = await api.post("api/trainees", searchTrainee);
 
     expect(createResponse.status()).toBe(201);
 
+    const createdData = await createResponse.json();
+    const traineeId = createdData.id;
+
     const response = await api.get(
-      `api/trainees?pageNumber=1&pageSize=10&search=${uniqueName}`,
+      `api/trainees?pageNumber=1&pageSize=10&search=${encodeURIComponent(uniqueName)}`,
     );
 
     expect(response.status()).toBe(200);
@@ -203,6 +221,8 @@ test.describe("Trainee API", () => {
         (trainee: { firstName: string }) => trainee.firstName === uniqueName,
       ),
     ).toBeTruthy();
+
+    await cleanup.deleteTrainee(traineeId);
   });
 
   test("should filter trainees by status", async () => {

@@ -2,10 +2,12 @@ import { test, expect, APIRequestContext, request } from "@playwright/test";
 import { ApiClient } from "../utils/apiClient";
 import { getAdminToken } from "../utils/authHelper";
 import { TestDataFactory } from "../utils/testDataFactory";
+import { CleanupHelper } from "../utils/cleanupHelper";
 
 test.describe("Mentor API", () => {
   let context: APIRequestContext;
   let api: ApiClient;
+  let cleanup: CleanupHelper;
 
   test.beforeAll(async () => {
     context = await request.newContext();
@@ -13,6 +15,7 @@ test.describe("Mentor API", () => {
     const token = await getAdminToken(context);
 
     api = new ApiClient(context, token);
+    cleanup = new CleanupHelper(api);
   });
 
   test("should get all mentors", async () => {
@@ -54,6 +57,8 @@ test.describe("Mentor API", () => {
     expect(mentor.email).toBe(mentorData.email);
     expect(mentor.expertise).toBe(mentorData.expertise);
     expect(mentor.status).toBe(mentorData.status);
+
+    await cleanup.deleteMentor(mentorId);
   });
 
   test("should create a mentor", async () => {
@@ -71,6 +76,8 @@ test.describe("Mentor API", () => {
     expect(mentor.email).toBe(mentorData.email);
     expect(mentor.expertise).toBe(mentorData.expertise);
     expect(mentor.status).toBe(mentorData.status);
+
+    await cleanup.deleteMentor(mentor.id);
   });
 
   test("should update a mentor", async () => {
@@ -83,12 +90,12 @@ test.describe("Mentor API", () => {
     const createdMentor = await createResponse.json();
     const mentorId = createdMentor.id;
 
-    const updateData = {
-      ...mentorData,
-      firstName: `Updated${Date.now()}`,
+    const updateData = TestDataFactory.mentor({
+      firstName: "Updated",
+      lastName: "Mentor",
       expertise: "C#",
-      status: "Inactive",
-    };
+      status: "Active",
+    });
 
     const updateResponse = await api.put(`api/mentors/${mentorId}`, updateData);
 
@@ -102,6 +109,8 @@ test.describe("Mentor API", () => {
     expect(updatedMentor.email).toBe(updateData.email);
     expect(updatedMentor.expertise).toBe(updateData.expertise);
     expect(updatedMentor.status).toBe(updateData.status);
+
+    await cleanup.deleteMentor(mentorId);
   });
 
   test("should delete a mentor", async () => {
@@ -144,13 +153,15 @@ test.describe("Mentor API", () => {
   });
 
   test("should return 400 for invalid mentor data", async () => {
-    const response = await api.post("api/mentors", {
+    const invalidMentor = TestDataFactory.mentor({
       firstName: "",
       lastName: "",
-      email: "invalid-email",
+      email: TestDataFactory.invalidEmail(),
       expertise: "",
-      status: "InvalidStatus",
+      status: TestDataFactory.invalidStatus(),
     });
+
+    const response = await api.post("api/mentors", invalidMentor);
 
     expect(response.status()).toBe(400);
 
@@ -173,25 +184,33 @@ test.describe("Mentor API", () => {
   });
 
   test("should return 400 for invalid email", async () => {
-    const mentorData = TestDataFactory.mentor();
-
-    const response = await api.post("api/mentors", {
-      ...mentorData,
-      email: "invalid-email",
+    const mentorData = TestDataFactory.mentor({
+      email: TestDataFactory.invalidEmail(),
     });
+
+    const response = await api.post("api/mentors", mentorData);
 
     expect(response.status()).toBe(400);
   });
 
   test("should search mentors", async () => {
-    const mentorData = TestDataFactory.mentor();
+    const uniqueName = `SearchMentor${Date.now()}`;
+    const mentorData = TestDataFactory.mentor({
+      firstName: uniqueName,
+      email: `${uniqueName.toLowerCase()}@test.com`,
+    });
 
     const createResponse = await api.post("api/mentors", mentorData);
 
     expect(createResponse.status()).toBe(201);
 
+    const createdMentor = await createResponse.json();
+    const mentorId = createdMentor.id;
+
     const response = await api.get(
-      `api/mentors?pageNumber=1&pageSize=10&search=${mentorData.firstName}`,
+      `api/mentors?pageNumber=1&pageSize=10&search=${encodeURIComponent(
+        uniqueName,
+      )}`,
     );
 
     expect(response.status()).toBe(200);
@@ -207,6 +226,8 @@ test.describe("Mentor API", () => {
           mentor.firstName === mentorData.firstName,
       ),
     ).toBeTruthy();
+
+    await cleanup.deleteMentor(mentorId);
   });
 
   test("should filter mentors by status", async () => {
