@@ -5,7 +5,7 @@ namespace TraineeManagement.Api.DTOs
     public class CreateSubmissionRequest
     {
         [Required(ErrorMessage = "Task Assignment ID is required")]
-        public int TaskAssignmentId { get; set; }
+        public required int TaskAssignmentId { get; set; }
 
         [Required(ErrorMessage = "A valid Github or Drive link is required")]
         [Url]

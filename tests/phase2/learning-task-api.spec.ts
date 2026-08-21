@@ -118,7 +118,9 @@ test.describe("Learning Task API", () => {
     expect(updatedLearningTask.description).toBe(
       updatedLearningTaskData.description,
     );
-    expect(updatedLearningTask.dueDate).toBe(updatedLearningTaskData.dueDate);
+    expect(new Date(updatedLearningTask.dueDate)).toEqual(
+      new Date(updatedLearningTaskData.dueDate),
+    );
     expect(updatedLearningTask.status).toBe(updatedLearningTaskData.status);
 
     await cleanup.deleteLearningTask(learningTaskId);

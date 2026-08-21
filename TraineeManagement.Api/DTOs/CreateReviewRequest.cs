@@ -5,10 +5,10 @@ namespace TraineeManagement.Api.DTOs
     public class CreateReviewRequest
     {
         [Required(ErrorMessage = "Submission Id is required")]
-        public int SubmissionId { get; set; }
+        public required int SubmissionId { get; set; }
 
         [Required(ErrorMessage = "Mentor Id is required")]
-        public int MentorId { get; set; }
+        public  required int MentorId { get; set; }
 
         [Required(ErrorMessage = "Feedback is required")]
         [MaxLength(100, ErrorMessage = "Max 100 characters limit")]
