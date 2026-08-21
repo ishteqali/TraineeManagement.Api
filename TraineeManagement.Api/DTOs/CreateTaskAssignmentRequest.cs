@@ -5,16 +5,16 @@ namespace TraineeManagement.Api.DTOs
     public class CreateTaskAssignmentRequest : IValidatableObject
     {
         [Required(ErrorMessage = "Trainee id is required")]
-        public int TraineeId { get; set; }
+        public required int TraineeId { get; set; }
 
         [Required(ErrorMessage = "Mentor id is required")]
-        public int MentorId { get; set; }
+        public required int MentorId { get; set; }
 
         [Required(ErrorMessage = "Learning Task id is required")]
-        public int LearningTaskId { get; set; }
+        public required int LearningTaskId { get; set; }
 
         [Required(ErrorMessage = "Due Date is required")]
-        public DateTime DueDate { get; set; }
+        public required DateTime DueDate { get; set; }
 
         [Required(ErrorMessage = "Status is required")]
         [EnumDataType(typeof(TaskAssignmentStatus), ErrorMessage = "Valid Status are Assigned, InProgress, Submitted, Revision or Completed")]
